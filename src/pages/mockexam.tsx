@@ -42,7 +42,7 @@ export default function MockExamPage(){
                         to right, and symbol &#9651; indicates a blank character.
                     </p>
 
-                    <div className="overflow-x-auto">
+                    <div className="w-full flex justify-center">
                         <table className="text-sm md:w-full border-collapse text-center">
                             <thead>
                                 <tr>
@@ -94,11 +94,13 @@ export default function MockExamPage(){
                         </table>
                     </div>
 
-                    <div className="grid grid-cols-4 md:grid-cols-1 md:gap-3 md:text-lg">
-                        <p>a) +0010</p>
-                        <p>b) -1</p>
-                        <p>c) 12.2</p>
-                        <p>d) 9.&#9651;</p>
+                    <div className='flex w-full justify-center'>
+                        <div className="grid grid-cols-4 md:grid-cols-1 md:gap-3 md:text-lg gap-5 ">
+                            <p>a) +0010</p>
+                            <p>b) -1</p>
+                            <p>c) 12.2</p>
+                            <p>d) 9.&#9651;</p>
+                        </div>
                     </div>
                 </div>
 

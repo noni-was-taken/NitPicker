@@ -223,7 +223,15 @@ export default function MockExamPage() {
     };
 
     const handleToggleQuestionTimerPause = () => {
-        setIsQuestionTimerPaused((currentValue) => !currentValue);
+        setIsQuestionTimerPaused((currentValue) => {
+            const nextValue = !currentValue;
+
+            if (currentValue && !isQuestionTimerVisible) {
+                setIsQuestionTimerVisible(true);
+            }
+
+            return nextValue;
+        });
     };
 
     const handleToggleQuestionTimerVisibility = () => {
@@ -311,20 +319,20 @@ export default function MockExamPage() {
                         disabled={currentIndex === 0}
                         className="disabled:opacity-30"
                     >
-                        <CaretLeftIcon className="h-10 md:h-15 w-auto" weight="bold"></CaretLeftIcon>
+                        <CaretLeftIcon className="h-10 md:h-15 w-auto hover:scale-110 duration-150 cursor-pointer" weight="bold"></CaretLeftIcon>
                     </button>
                     <div className="flex items-center gap-3 md:gap-4">
                         <h1 className="text-3xl md:text-5xl font-light">{examTimerDisplay}</h1>
                         <button
                             type="button"
                             onClick={handleToggleOverallTimerPause}
-                            className="p-1 md:p-2"
+                            className="p-1 md:p-2 hover:scale-110 duration-150 cursor-pointer"
                             aria-label={isOverallTimerPaused ? "Resume overall timer" : "Pause overall timer"}
                         >
                             {isOverallTimerPaused ? (
-                                <PlayCircleIcon className="h-8 md:h-10 w-auto" weight="bold"></PlayCircleIcon>
+                                <PlayCircleIcon className="h-6 md:h-10 w-auto" weight="bold"></PlayCircleIcon>
                             ) : (
-                                <PauseCircleIcon className="h-8 md:h-10 w-auto" weight="bold"></PauseCircleIcon>
+                                <PauseCircleIcon className="h-6 md:h-10 w-auto" weight="bold"></PauseCircleIcon>
                             )}
                         </button>
                     </div>
@@ -333,7 +341,7 @@ export default function MockExamPage() {
                         onClick={handleNextQuestion}
                         className="disabled:opacity-30"
                     >
-                        <CaretRightIcon className="h-10 md:h-15 w-auto" weight="bold"></CaretRightIcon>
+                        <CaretRightIcon className="h-10 md:h-15 w-auto hover:scale-110 duration-150 cursor-pointer" weight="bold"></CaretRightIcon>
                     </button>
                 </div>
 
@@ -406,28 +414,22 @@ export default function MockExamPage() {
                             ))}
                         </div>
 
-                        <p className="text-xs opacity-60">Source: {currentQuestion.pdfName} · #{currentQuestion.questionNumber}</p>
+                        <p className="text-xs opacity-60">Source: {currentQuestion.pdfName} · #{currentQuestion.questionNumber} · Philnits Vault</p>
                     </div>
 
-                    <div className="md:w-1/2 w-full md:px-10 flex flex-col-reverse md:flex-col md:gap-12 gap-8">
+                    <div className="md:w-1/2 w-full md:px-10 flex flex-col md:flex-col md:gap-12 gap-8">
                         <div className="flex justify-between items-center gap-4">
                             <div className="flex md:gap-5 gap-2 flex-col-reverse md:flex-row">
                                 <button
                                     type="button"
-                                    onClick={() => finalizeExam()}
-                                    className="font-extrabold md:px-3 md:py-2 px-5 py-2 border-2 md:h-15 flex items-center md:gap-2"
-                                >
-                                    FORFEIT
-                                </button>
-                                <button
-                                    type="button"
                                     onClick={handleUseHint}
                                     disabled={hintVisible}
-                                    className="font-extrabold md:px-5 md:py-2 px-5 py-2 border-2 md:h-15 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="font-extrabold md:px-5 md:py-2 px-5 py-2 border-2 md:h-15 w-35 disabled:opacity-40 disabled:cursor-not-allowed
+                                    hover:font-light hover:bg-black hover:text-white duration-150 cursor-pointer"
                                 >
                                     HINT
                                 </button>
-                            </div>
+                            </div>  
 
                             <div className="flex md:gap-5 gap-4">
                                 <div className="md:h-36 h-24 aspect-square rounded-full flex items-center justify-center border-3 md:border-5">
@@ -445,19 +447,19 @@ export default function MockExamPage() {
                                         aria-label={isQuestionTimerVisible ? "Hide question timer" : "Show question timer"}
                                     >
                                         {isQuestionTimerVisible ? (
-                                            <EyeSlashIcon className="md:h-8 w-auto h-10" weight="bold"></EyeSlashIcon>
+                                            <EyeSlashIcon className="md:h-8 w-auto h-10 hover:scale-110 duration-150" weight="bold"></EyeSlashIcon>
                                         ) : (
-                                            <EyeIcon className="md:h-8 w-auto h-10" weight="bold"></EyeIcon>
+                                            <EyeIcon className="md:h-8 w-auto h-10 hover:scale-110 duration-150" weight="bold"></EyeIcon>
                                         )}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleToggleQuestionTimerPause}
-                                        className="cursor-pointer"
+                                        className="cursor-pointer hover:scale-110 duration-150"
                                         aria-label={isQuestionTimerPaused ? "Resume question timer" : "Pause question timer"}
                                     >
                                         {isQuestionTimerPaused ? (
-                                            <PlayCircleIcon className="md:h-8 w-auto h-10" weight="bold"></PlayCircleIcon>
+                                            <PlayCircleIcon className="md:h-8 w-auto h-10 " weight="bold"></PlayCircleIcon>
                                         ) : (
                                             <PauseCircleIcon className="md:h-8 w-auto h-10" weight="bold"></PauseCircleIcon>
                                         )}

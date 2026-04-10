@@ -90,7 +90,7 @@ export default function MockExamResultsPage() {
                                 <h1 className="font-semibold text-2xl sm:text-3xl text-black opacity-50">/{result.totalQuestions}</h1>
                             </div>
                             <p className={`mt-3 text-lg sm:text-xl font-bold ${didPass ? "text-green-700" : "text-red-700"}`}>
-                                {didPass ? `PASSED (${PASSING_PERCENTAGE}% or higher)` : `NT tried bro (below ${PASSING_PERCENTAGE}%)`}
+                                {didPass ? `We did it bro (${PASSING_PERCENTAGE}% or higher)` : `NT tried bro (below ${PASSING_PERCENTAGE}%)`}
                             </p>
 
                             <div className="mt-6 md:mt-8 flex flex-col gap-4 md:gap-5 w-full lg:max-w-sm">
@@ -105,7 +105,7 @@ export default function MockExamResultsPage() {
                                 <div className="flex items-baseline justify-between border-b pb-2">
                                     <p className="text-sm uppercase tracking-wide opacity-60">Result</p>
                                     <p className={`text-2xl sm:text-3xl font-bold ${didPass ? "text-green-700" : "text-red-700"}`}>
-                                        {didPass ? "Passed" : "Cry to Mam Pena"}
+                                        {didPass ? "Inom with Mam Pena" : "Cry to Mam Pena"}
                                     </p>
                                 </div>
                                 <div className="flex items-baseline justify-between border-b pb-2">
@@ -197,7 +197,36 @@ export default function MockExamResultsPage() {
                                     })}
                                 </div>
                             </div>
+                            
+                            <div className="mt-2 flex flex-col gap-3">
+                                <div className="flex items-baseline justify-between border-b pb-2">
+                                    <p className="text-sm uppercase tracking-wide opacity-60">Hints Used</p>
+                                    <p className="text-xl sm:text-2xl font-bold">{result.hintsUsed}</p>
+                                </div>
+                                <div className="flex items-baseline justify-between border-b pb-2">
+                                    <p className="text-sm uppercase tracking-wide opacity-60">Avg Time per Question</p>
+                                    <p className="text-xl sm:text-2xl font-bold">{averageTimePerQuestion}</p>
+                                </div>
 
+                                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate("/mockexamprep")}
+                                        className="w-full border-2 border-black bg-black text-white font-bold py-3 px-4 hover:bg-white hover:text-black transition-colors duration-200 cursor-pointer"
+                                    >
+                                        TAKE TEST AGAIN
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate("/")}
+                                        className="w-full border-2 border-black bg-white text-black font-bold py-3 px-4 hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer"
+                                    >
+                                        GO HOME
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* WRONGED QUESTIONS SECTION */}
                             <div className="flex flex-col gap-4 mt-2">
                                 <h3 className="text-sm uppercase tracking-wide opacity-60">Questions You Got Wrong</h3>
                                 {wrongQuestions.length === 0 ? (
@@ -305,33 +334,7 @@ export default function MockExamResultsPage() {
                                 )}
                             </div>
 
-                            <div className="mt-2 flex flex-col gap-3">
-                                <div className="flex items-baseline justify-between border-b pb-2">
-                                    <p className="text-sm uppercase tracking-wide opacity-60">Hints Used</p>
-                                    <p className="text-xl sm:text-2xl font-bold">{result.hintsUsed}</p>
-                                </div>
-                                <div className="flex items-baseline justify-between border-b pb-2">
-                                    <p className="text-sm uppercase tracking-wide opacity-60">Avg Time per Question</p>
-                                    <p className="text-xl sm:text-2xl font-bold">{averageTimePerQuestion}</p>
-                                </div>
-
-                                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate("/mockexamprep")}
-                                        className="w-full border-2 border-black bg-black text-white font-bold py-3 px-4 hover:bg-white hover:text-black transition-colors duration-200 cursor-pointer"
-                                    >
-                                        TAKE TEST AGAIN
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate("/")}
-                                        className="w-full border-2 border-black bg-white text-black font-bold py-3 px-4 hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer"
-                                    >
-                                        GO HOME
-                                    </button>
-                                </div>
-                            </div>
+                            
                         </section>
                     </div>
                 </div>

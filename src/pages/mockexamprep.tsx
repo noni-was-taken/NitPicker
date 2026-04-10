@@ -137,7 +137,7 @@ export default function MockExamPrepPage() {
 
   return (
     <>
-      <div className="min-h-screen flex w-full flex-col items-center bg-white gap-10 select-none">
+      <div className="min-h-screen flex w-full flex-col items-center bg-white gap-10 select-none py-10 md:py-0">
         <NavBar></NavBar>
 
         <div className="min-h-[78vh] w-full flex flex-col lg:flex-row items-center  justify-between px-6 lg:px-20 gap-10">
@@ -170,26 +170,18 @@ export default function MockExamPrepPage() {
                   >
                     AM EXAM
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setExamType("PM EXAM")}
-                    className={`font-medium text-base lg:text-xl px-4 py-2 border-2 flex-1 duration-200 cursor-pointer ${
-                      examType === "PM EXAM" ? "bg-black text-white" : "bg-white text-black"
-                    }`}
-                  >
-                    PM EXAM
-                  </button>
+      
                 </div>
               </div>
               
               <div className="flex-1 flex flex-col items-center justify-center border-l-2 gap-4 px-2">
-                <p className="text-gray-700 text-center">
-                  If you want an actual exam simulation:
+                <p className="text-gray-700 text-center text-sm">
+                  If you want an actual exam simulation settings:
                 </p>
                 <button
                   type="button"
                   onClick={applyActualExamDefaults}
-                  className="border-2 py-4 px-7 font-extrabold duration-300 hover:bg-black hover:text-white hover:font-light cursor-pointer"
+                  className="border-2 py-2 px-4 font-extrabold duration-75 hover:bg-black hover:text-white hover:font-light cursor-pointer "
                 >
                   ACTUAL EXAM
                 </button>

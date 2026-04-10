@@ -40,7 +40,7 @@ export default function HomePage(){
             <div className="w-[95vw] h-[40vh] md:flex items-end justify-end px-8 py-4 border-r-5 border-black hidden ">
                 <div className="absolute h-[40vh] w-[90vw] flex items-center justify-start">
                     <h1 className="text-5xl lg:text-9xl  opacity-30">
-                        PHILNITS NLNG GUD
+                        KAKAYANIN
                     </h1>
                 </div>
                 <h1 className="text-4xl">
@@ -51,7 +51,7 @@ export default function HomePage(){
             {/* INFORMATION */}
             <div className="w-full min-h-[20vh] flex-col items-center hidden md:flex">
                 <h1 className="text-3xl font-bold mb-5">
-                    What THE HELL is NitPicker?
+                    What is NitPicker?
                 </h1>
                 <div className="w-74">
                     <p className="text-center">

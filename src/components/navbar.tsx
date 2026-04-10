@@ -1,4 +1,6 @@
+
 import Logo from '../assets/picker.svg'
+import LogoDark from '../assets/picker-dark.svg'
 import { Link } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../hooks/useTheme'
@@ -10,7 +12,7 @@ export default function NavBar(){
         <>
         <div className="hidden md:flex w-[95vw] h-auto items-center border-b-1 border-black dark:border-white px-3 py-4 justify-between">
                 <Link to="/" className="m-0 text-2xl font-bold text-black dark:text-white duration-300 transition-all hover:scale-110 flex items-center">
-                    <img src={Logo} alt="NitPicker logo" className='h-12 w-auto' />   NitPicker
+                    <img src= {isDark ? LogoDark : Logo} alt="NitPicker logo" className='h-12 w-auto' />   NitPicker
                 </Link>
 
                 <div className="flex gap-10 items-center">

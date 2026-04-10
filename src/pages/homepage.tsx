@@ -32,7 +32,7 @@ export default function HomePage(){
 
     return(
         <>
-        <div className="min-h-screen flex w-full flex-col items-center bg-white dark:bg-zinc-950 gap-10 select-none">
+        <div className="min-h-screen flex w-full flex-col items-center bg-white dark:bg-zinc-950 py-10 md:py-0 select-none">
             {/* NAV BAR */}
             <NavBar></NavBar>
             

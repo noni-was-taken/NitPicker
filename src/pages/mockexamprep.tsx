@@ -184,7 +184,7 @@ export default function MockExamPrepPage() {
             <h1 className="-tracking-widest text-6xl lg:text-8xl">You ready?</h1>
             <button
               type="button"
-              onClick={handleStartExam}
+              onClick={() => handleStartExam()}
               className="flex py-6 lg:py-8 items-center justify-center border-2 duration-300 group hover:bg-black cursor-pointer"
             >
               <h1 className="text-2xl w-50 group-hover:text-white font-bold group-hover:font-light duration-300">

@@ -331,7 +331,7 @@ export default function MockExamResultsPage() {
                                                                                 {normalizeMathDelimiters(normalizeLegacySymbols(wrongQuestion.answerExplanation))}
                                                                             </ReactMarkdown>
                                                                         ) : (
-                                                                            <p>No detailed explanatzion available in the source markdown for this item.</p>
+                                                                            <p>No detailed explanation available in the source markdown for this item.</p>
                                                                         )}
                                                                     </div>
                                                                 </div>

@@ -310,19 +310,26 @@ export default function MockExamResultsPage() {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="border-l-4 border-black dark:border-white pl-3">
-                                                                <p className="text-xs uppercase tracking-wide opacity-70 font-semibold">How to answer it</p>
-                                                                <div className="mt-1 text-sm md:text-base leading-relaxed prose prose-sm max-w-none prose-p:my-1">
-                                                                    {wrongQuestion.answerExplanation ? (
-                                                                        <ReactMarkdown
-                                                                            remarkPlugins={[remarkGfm, remarkMath]}
-                                                                            rehypePlugins={[rehypeKatex]}
-                                                                        >
-                                                                            {normalizeMathDelimiters(normalizeLegacySymbols(wrongQuestion.answerExplanation))}
-                                                                        </ReactMarkdown>
-                                                                    ) : (
-                                                                        <p>No detailed explanation available in the source markdown for this item.</p>
-                                                                    )}
+                                                            <div className="border-l-4 border-black pl-3 max-h-72 overflow-y-auto
+                                                                [&::-webkit-scrollbar]:w-[6px]
+                                                                [&::-webkit-scrollbar-track]:bg-transparent
+                                                                [&::-webkit-scrollbar-thumb]:bg-black"
+                                                                 style={{scrollbarColor: "black transparent", scrollbarWidth: "auto", direction: "rtl"}}
+                                                            >
+                                                                <div style={{direction: "ltr"}}>
+                                                                    <p className="text-xs uppercase tracking-wide opacity-70 font-semibold">How to answer it</p>
+                                                                    <div className="mt-1 text-sm md:text-base leading-relaxed prose prose-sm max-w-none prose-p:my-1">
+                                                                        {wrongQuestion.answerExplanation ? (
+                                                                            <ReactMarkdown
+                                                                                remarkPlugins={[remarkGfm, remarkMath]}
+                                                                                rehypePlugins={[rehypeKatex]}
+                                                                            >
+                                                                                {normalizeMathDelimiters(normalizeLegacySymbols(wrongQuestion.answerExplanation))}
+                                                                            </ReactMarkdown>
+                                                                        ) : (
+                                                                            <p>No detailed explanation available in the source markdown for this item.</p>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>

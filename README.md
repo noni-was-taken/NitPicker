@@ -46,8 +46,6 @@ Markdown and math in explanations are rendered in HTML using:
 - Vite
 - Tailwind CSS
 - Phosphor Icons
-- Vitest
-- i18next / react-i18next
 - Sentry (optional, env-gated)
 
 ## Getting Started
@@ -74,18 +72,6 @@ npm run build
 
 ```bash
 npm run preview
-```
-
-5. Run tests
-
-```bash
-npm run test
-```
-
-6. Run Storybook
-
-```bash
-npm run storybook
 ```
 
 ## Environment Variables

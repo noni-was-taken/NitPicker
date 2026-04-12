@@ -149,7 +149,7 @@ export default function MockExamResultsPage() {
                                 <div className="flex items-baseline justify-between border-b pb-2">
                                     <p className="text-sm uppercase tracking-wide opacity-60">Result</p>
                                     <p className={`text-2xl sm:text-3xl font-bold ${didPass ? "text-green-700" : "text-red-700"}`}>
-                                        {didPass ? "Inom with Mam Pena" : "Cry to Mam Pena"}
+                                        {didPass ? "Celebrate with Mam Pena" : "Cry to Mam Pena"}
                                     </p>
                                 </div>
                                 <div className="flex items-baseline justify-between border-b pb-2">

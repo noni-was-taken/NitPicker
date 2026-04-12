@@ -39,7 +39,7 @@ export default function HomePage(){
             <div className="w-[95vw] h-[40vh] md:flex items-end justify-end px-8 py-4 border-r-5 border-black dark:border-white hidden ">
                 <div className="absolute h-[40vh] w-[90vw] flex items-center justify-start">
                     <h1 className="text-5xl lg:text-9xl opacity-30 text-black dark:text-white">
-                        KAKAYANIN
+                        2 WEEKS LEFT :)
                     </h1>
                 </div>
                 <h1 className="text-4xl text-black dark:text-white">
@@ -84,10 +84,7 @@ export default function HomePage(){
                 <h1 className="text-3xl px-10 text-center font-light text-black dark:text-white">
                     Welcome to NitPicker! 
                 </h1>
-                
-                <button className="text-2xl font-light text-white bg-black dark:text-black dark:bg-white h-20 w-40 mt-10" onClick={() => navigate('/mockexamprep')}>
-                    MOCK EXAM
-                </button>
+            
 
                 <button
                     type="button"

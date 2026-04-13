@@ -27,3 +27,25 @@
     @apply w-full max-w-xl border-2 border-black dark:border-white bg-white dark:bg-zinc-900 p-6 md:p-8 shadow-2xl;
   }
 }
+
+/* Markdown table rendering inside mock exam questions */
+.question-table-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.question-table-wrap th,
+.question-table-wrap td {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.question-table-wrap th {
+  font-weight: 700;
+}
+
+:is(.dark) .question-table-wrap th,
+:is(.dark) .question-table-wrap td {
+  border-color: rgba(255, 255, 255, 0.2);
+}

@@ -19,6 +19,7 @@ type ParsedVaultQuestion = {
   subjectTopic: string;
   questionImagePath: string | null;
   containsMarkdownTable: boolean;
+  tableMarkdown: string | null;
 };
 
 const isString = (value: unknown): value is string => typeof value === "string";
@@ -202,13 +203,19 @@ const requiresVisualContent = (
   optionLines: string[],
   questionImagePath: string | null,
   containsMarkdownTable: boolean,
+  tableMarkdown: string | null,
 ): boolean => {
-  if (questionImagePath || containsMarkdownTable) {
+  if (questionImagePath) {
     return true;
   }
 
+  // If the question has a markdown table, it can be rendered — don't exclude it.
+  if (containsMarkdownTable && tableMarkdown) {
+    return false;
+  }
+
   const combined = `${questionText}\n${optionLines.join("\n")}`;
-  return /\b(table|figure|diagram|graph|chart|flowchart|shown below|as shown|refer to the (?:following )?(?:figure|table)|legend|in the figure|in the table|see figure|see table)\b/i.test(combined);
+  return /\b(figure|diagram|graph|chart|flowchart|shown below|as shown|refer to the (?:following )?(?:figure|table)|legend|in the figure|in the table|see figure|see table)\b/i.test(combined);
 };
 
 const toQuestionImagePath = (sourcePath: string, imageFileName: string): string => {
@@ -286,18 +293,55 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
   const answerExplanation = extractExplanationText(lines.slice(answerLineIndex + 1));
 
   const bodyLines = lines.slice(headingIndex + 1, delimiterIndex);
-  const containsMarkdownTable = bodyLines.some((line) => {
-    const trimmed = line.trim();
-    return /^\|.+\|$/.test(trimmed) || (/^[\s:|-]+$/.test(trimmed) && trimmed.includes("|"));
-  });
+
+  // Detect and extract markdown tables from the question body.
+  const tableLineRanges: Array<{ start: number; end: number }> = [];
+  let tableStart = -1;
+  for (let i = 0; i < bodyLines.length; i++) {
+    const trimmed = bodyLines[i].trim();
+    const isTableLine = /^\|.+\|$/.test(trimmed) || (/^[\s|:|-]+$/.test(trimmed) && trimmed.includes("|") && trimmed.includes("-"));
+    if (isTableLine) {
+      if (tableStart < 0) {
+        tableStart = i;
+      }
+    } else if (tableStart >= 0) {
+      tableLineRanges.push({ start: tableStart, end: i - 1 });
+      tableStart = -1;
+    }
+  }
+  if (tableStart >= 0) {
+    tableLineRanges.push({ start: tableStart, end: bodyLines.length - 1 });
+  }
+
+  const tableLineIndices = new Set<number>();
+  const tableChunks: string[] = [];
+  for (const range of tableLineRanges) {
+    // A valid markdown table needs at least a header row and a separator row.
+    if (range.end - range.start >= 1) {
+      const chunk = bodyLines.slice(range.start, range.end + 1).map((l) => l.trimEnd()).join("\n");
+      tableChunks.push(chunk);
+      for (let i = range.start; i <= range.end; i++) {
+        tableLineIndices.add(i);
+      }
+    }
+  }
+
+  const containsMarkdownTable = tableChunks.length > 0;
+  const tableMarkdown = containsMarkdownTable ? tableChunks.join("\n\n") : null;
+
   const questionParts: string[] = [];
   const optionLines: string[] = [];
   let firstImagePath: string | null = null;
   let currentOptionIndex = -1;
 
-  bodyLines.forEach((rawLine) => {
+  bodyLines.forEach((rawLine, lineIndex) => {
     const line = rawLine.trim();
     if (!line) {
+      return;
+    }
+
+    // Skip lines that belong to an extracted table.
+    if (tableLineIndices.has(lineIndex)) {
       return;
     }
 
@@ -362,6 +406,7 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
     subjectTopic,
     questionImagePath: firstImagePath,
     containsMarkdownTable,
+    tableMarkdown,
   };
 };
 
@@ -381,7 +426,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
   return parsedVaultQuestions
     .filter((question) => question.examType === settings.examType)
     .filter((question) => selectedTopics.has(question.subjectTopic))
-    .filter((question) => !requiresVisualContent(question.questionText, question.optionLines, question.questionImagePath, question.containsMarkdownTable))
+    .filter((question) => !requiresVisualContent(question.questionText, question.optionLines, question.questionImagePath, question.containsMarkdownTable, question.tableMarkdown))
     .map<MockExamQuestion | null>((question, index) => {
       const options = extractOptionsFromLines(question.optionLines);
       if (options.length !== 4) {
@@ -398,7 +443,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
         pdfName: `${question.examCode}.md`,
         questionNumber: question.questionNumber,
         questionText: question.questionText,
-        tableText: null,
+        tableText: question.tableMarkdown,
         questionImagePath: null,
         options: options.map((option) => ({
           key: option.key,

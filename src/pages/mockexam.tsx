@@ -350,9 +350,14 @@ export default function MockExamPage() {
                         </div>
 
                         {currentQuestion.tableText ? (
-                            <div className="border border-black/25 dark:border-white/25 bg-black/2 dark:bg-white/5 p-3 md:p-4">
-                                <p className="font-extrabold text-xs md:text-sm mb-2 tracking-wide">TABLE</p>
-                                <pre className="text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto">{normalizeLegacySymbols(currentQuestion.tableText)}</pre>
+                            <div className="question-table-wrap border border-black/25 dark:border-white/25 bg-black/2 dark:bg-white/5 p-3 md:p-4 overflow-x-auto">
+                                <div className="text-xs md:text-sm leading-relaxed">
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                    >
+                                        {currentQuestion.tableText}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
                         ) : null}
 

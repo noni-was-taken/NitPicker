@@ -18,6 +18,7 @@ type PreviousExamQuestion = {
   subjectTopic: string;
   subjectCategory: CategoryName | "Uncategorized";
   questionText: string;
+  tableText: string | null;
   options: { key: string; text: string }[];
   correctOption: string;
   correctOptionText: string | null;
@@ -322,13 +323,52 @@ const parseVaultQuestion = (
   }
 
   const bodyLines = lines.slice(headingIndex + 1, delimiterIndex);
+
+  // Detect and extract markdown tables from the question body.
+  const tableLineRanges: Array<{ start: number; end: number }> = [];
+  let tableStart = -1;
+  for (let i = 0; i < bodyLines.length; i++) {
+    const trimmed = bodyLines[i].trim();
+    const isTableLine = /^\|.+\|$/.test(trimmed) || (/^[\s|:|-]+$/.test(trimmed) && trimmed.includes("|") && trimmed.includes("-"));
+    if (isTableLine) {
+      if (tableStart < 0) {
+        tableStart = i;
+      }
+    } else if (tableStart >= 0) {
+      tableLineRanges.push({ start: tableStart, end: i - 1 });
+      tableStart = -1;
+    }
+  }
+  if (tableStart >= 0) {
+    tableLineRanges.push({ start: tableStart, end: bodyLines.length - 1 });
+  }
+
+  const tableLineIndices = new Set<number>();
+  const tableChunks: string[] = [];
+  for (const range of tableLineRanges) {
+    if (range.end - range.start >= 1) {
+      const chunk = bodyLines.slice(range.start, range.end + 1).map((l) => l.trimEnd()).join("\n");
+      tableChunks.push(chunk);
+      for (let i = range.start; i <= range.end; i++) {
+        tableLineIndices.add(i);
+      }
+    }
+  }
+
+  const tableText = tableChunks.length > 0 ? tableChunks.join("\n\n") : null;
+
   const questionParts: string[] = [];
   const options: { key: string; text: string }[] = [];
   let currentOptionIndex = -1;
 
-  bodyLines.forEach((rawLine) => {
+  bodyLines.forEach((rawLine, lineIndex) => {
     const line = rawLine.trim();
     if (!line || isVaultCommentLine(line) || /^!\[\[/.test(line)) {
+      return;
+    }
+
+    // Skip lines that belong to an extracted table.
+    if (tableLineIndices.has(lineIndex)) {
       return;
     }
 
@@ -380,6 +420,7 @@ const parseVaultQuestion = (
     subjectTopic,
     subjectCategory,
     questionText,
+    tableText,
     options,
     correctOption,
     correctOptionText: correctChoice?.text ?? null,
@@ -548,6 +589,17 @@ export default function PreviousExamsPage() {
                                           )}
                                         </ReactMarkdown>
                                       </div>
+                                      {question.tableText ? (
+                                        <div className="question-table-wrap mt-2 border border-black/25 dark:border-white/25 bg-black/2 dark:bg-white/5 p-2 md:p-3 overflow-x-auto">
+                                          <div className="text-xs md:text-sm leading-relaxed">
+                                            <ReactMarkdown
+                                              remarkPlugins={[remarkGfm]}
+                                            >
+                                              {question.tableText}
+                                            </ReactMarkdown>
+                                          </div>
+                                        </div>
+                                      ) : null}
                                       <p className="text-xs md:text-sm opacity-70">
                                         Topic: {question.subjectTopic}
                                       </p>

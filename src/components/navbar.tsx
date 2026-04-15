@@ -1,4 +1,3 @@
-
 import Logo from '../assets/picker.svg'
 import LogoDark from '../assets/picker-dark.svg'
 import { Link } from 'react-router-dom'
@@ -56,6 +55,11 @@ export default function NavBar(){
             </div>
         </div>
         <div className='md:hidden relative flex border-black dark:border-white h-14 w-full justify-end pr-7 items-center'>
+            <div className='hidden'>
+                <h1 className='text-3xl'>
+                    PitNicker
+                </h1>
+            </div>
             <button
                 type="button"
                 className='relative z-20'
@@ -66,6 +70,7 @@ export default function NavBar(){
             </button>
 
             <div className={`${isOpen === "Open" ? "opacity-100 backdrop-blur-2xl" : "opacity-0 backdrop-blur-none pointer-events-none"} fixed inset-0 z-10 dark:bg-black/54 bg-white/54 duration-300 transition-all ease-in-out flex items-center justify-center flex-col gap-12` }> 
+
                 <div className="px-2 py-1 group hover:bg-black dark:hover:bg-white transition-all duration-300">
                     <Link to="/" onClick={closeMenu} className="text-xl font-bold group-hover:text-white dark:group-hover:text-black transition-all duration-300">HOME</Link>
                 </div>

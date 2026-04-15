@@ -13,7 +13,7 @@ b) Bitwise NAND operation with 11110000.
 c) Bitwise OR operation with 00001111.
 d) Bitwise XOR operation with 00001111.
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Understand the goal
 
 We want to keep the upper 4 bits unchanged and force the lower 4 bits to zero.
@@ -40,7 +40,7 @@ b) 10111.110
 c) 11101.011
 d) 11101.110
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Convert the integer part
 
 $23 \div 2$: repeated division gives $23 = 16+4+2+1 = 10111_2$
@@ -68,7 +68,7 @@ b) It is a technology that gives computers the ability to learn in the same way 
 c) It is a technology that reproduces vital phenomena or evolutionary processes by using computers and machines.
 d) It is a technology to give computers the ability to manage learning materials and learning by using a web system or other information technology so that people can learn interactively.
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Identify each option's description
 
 - Option A describes an **expert system** (rule-based inference from encoded knowledge).
@@ -93,7 +93,7 @@ b) 79, 14, 92, 35
 c) 79, 92, 35, 14
 d) 92, 79, 14, 35
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Compute home slots
 
 - $79 \mod 11 = 2$ → home slot 2
@@ -121,7 +121,7 @@ b) 20
 c) 200
 d) 3,200
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Recall the MIPS formula
 
 $$\text{MIPS} = \frac{\text{Clock frequency (Hz)}}{\text{CPI} \times 10^6}$$
@@ -141,7 +141,7 @@ b) Program counter
 c) Stack pointer
 d) Status register
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Review CPU register functions
 
 - **Instruction register**: holds the currently executing instruction.
@@ -167,7 +167,7 @@ b) 0.20
 c) 0.83
 d) 1.00
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Set up the effective access time equation
 
 Let $h$ = hit ratio. Effective access time:
@@ -197,7 +197,7 @@ b) If an internal on-premises business system with company-specific functions is
 c) If PaaS is to be used, platform management and OS updates are performed by the service provider, so the burden of installation and operation can be reduced.
 d) If SaaS is to be used temporarily for the development or evaluation of an internal business system, a highly flexible development environment can be provided.
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Evaluate each option
 
 - **A** is false — IaaS providers do not universally guarantee high availability; the customer is still responsible for their own architecture.
@@ -219,7 +219,7 @@ b) 0.10
 c) 0.18
 d) 0.19
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Calculate availability for condition (1) — parallel (at least one)
 
 $$A_1 = 1 - (1-0.9)^2 = 1 - 0.01 = 0.99$$
@@ -252,7 +252,7 @@ b) 3
 c) 3.25
 d) 3.5
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Simulate the schedule
 
 - t=0: P1 starts (priority 2)
@@ -283,7 +283,7 @@ P1 ran from 0–2 (2 ms), was preempted at t=2. It resumed at t=3 and ran until 
 
 $$\text{Average} = \frac{1+0+5+5}{4} = 2.75$$
 
-**Answer: A (2.75)**
+a) Bitwise AND operation with 11110000.
 
 ---
 
@@ -296,7 +296,7 @@ b) 23
 c) 24
 d) 25
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Calculate total bytes
 
 - Pixels: $1024 \times 768 = 786{,}432$
@@ -320,7 +320,7 @@ b) It compares a given target value with a controlled value obtained from a sens
 c) It converts power from an energy source into rotation, translational motion, or other movements based on control signals.
 d) It detects position, angle, velocity, acceleration, force, temperature, and similar parameters, and converts them into electrical information.
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Define each component
 
 - **A** describes an **amplifier**.
@@ -343,7 +343,7 @@ b) Format check
 c) Logical check
 d) Sequence check
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Review input validation types
 
 - **Duplication check**: detects duplicate records.
@@ -366,7 +366,7 @@ b) Managing a transaction that combines a series of processes as a logical unit
 c) Managing the data access rights of users
 d) Placing an exclusive lock to data before updates
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Map each option to its purpose
 
 - **A** → **Integrity** (referential integrity enforcement)
@@ -389,7 +389,7 @@ b) To define the logical structure of the database
 c) To determine the exact data types for every database attribute
 d) To implement database security measures
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Understand database design phases
 
 - **Conceptual design**: high-level, implementation-independent model of the data and relationships (e.g., ER diagram). Focuses on defining what data exists and how entities relate.
@@ -417,7 +417,7 @@ b) `HAVING SUM(UnitPrice * Quantity) >= 5000;`
 c) `HAVING SUM(UnitPrice * Quantity) >= 5000 GROUP BY ProductID;`
 d) `WHERE SUM(UnitPrice * Quantity) >= 5000;`
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Understand GROUP BY and HAVING
 
 - `GROUP BY` groups rows with the same ProductID together.
@@ -442,7 +442,7 @@ b) When large granularity is set for all data in a table to be referenced, data 
 c) When large granularity is set for data to be updated, the waiting times for other transactions increase, and the total throughput declines.
 d) When large granularity is set, the number of data items included increases, and the number of locks that one transaction makes increases.
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Understand lock granularity
 
 Lock granularity refers to the size of the data unit being locked (e.g., table > page > row). **Large granularity** = locking a larger unit (e.g., the whole table).
@@ -465,7 +465,7 @@ b) Destination MAC address
 c) Source IP address
 d) Source MAC address
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Recall router operation
 
 Routers operate at **Layer 3 (Network layer)** and make forwarding decisions based on **IP addresses**. They consult their routing table using the **destination IP address** to determine the next hop.
@@ -486,7 +486,7 @@ b) Network
 c) Physical
 d) Transport
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Review OSI layer functions
 
 | Layer | Function |
@@ -509,7 +509,7 @@ b) It resolves domain names into its IP addresses.
 c) It resolves IP addresses into the corresponding MAC addresses.
 d) It translates IPv4 addresses into IPv6 addresses.
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Define ARP
 
 ARP (Address Resolution Protocol) is used within a local network to find the **MAC address** that corresponds to a known **IP address**. A host broadcasts "Who has IP X?" and the device with that IP replies with its MAC address.
@@ -531,7 +531,7 @@ b) [A] netstat, [B] traceroute
 c) [A] ping, [B] traceroute
 d) [A] traceroute, [B] ping
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Define the tools
 
 - **ping**: sends ICMP echo requests to test **reachability** of a host.
@@ -554,7 +554,7 @@ b) In order to interrupt the target service, the attacker uses the DNS server as
 c) In order to obtain internal information, the zone information stored in the DNS server is compiled and transferred.
 d) The version information of the DNS server software is obtained to identify a security hole.
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Define DNS cache poisoning
 
 DNS cache poisoning (also called DNS spoofing) is an attack where **corrupted DNS records are inserted into a resolver's cache**, causing users to be directed to malicious IP addresses when they look up legitimate domain names.
@@ -577,7 +577,7 @@ b) Reference right
 c) Update right
 d) Update right and reference right
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Apply the principle of least privilege
 
 The application only performs **SELECT** (read) operations — it retrieves and displays data, nothing more. It does not insert, update, delete, create, or drop anything.
@@ -598,7 +598,7 @@ b) No system construction needs to be performed, and neither the definition of s
 c) No system operation needs to be performed, and no consideration concerning work procedures at the time of a failure or backup is required.
 d) No system security management needs to be performed, and neither the creation of information security management rules nor the assignment of an administrator is required.
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Understand what SaaS offloads
 
 With SaaS, the provider handles application development, infrastructure, and maintenance. The customer does **not** need to build or deploy the system — they simply use it.
@@ -621,7 +621,7 @@ b) If an IC card is lost, a new IC card is issued, and after the PIN is reset, t
 c) The PIN is set by combining the numeric information imprinted on the surface of the IC card.
 d) When an IC card is delivered, the PIN is not enclosed, but is notified to the user through another channel.
 ?
-**Answer: D**
+d) Bitwise XOR operation with 00001111.
 ### Step 1: Evaluate security of each option
 
 - **A** is insecure — a shared PIN defeats the purpose of individual authentication; anyone with any card could authenticate as anyone else.
@@ -640,7 +640,7 @@ b) The hash value of each file of the contents of the web server is stored and p
 c) The memory usage of the web server is checked periodically to ensure that a buffer overflow has not occurred.
 d) The updated date of each file of the contents of the web server is stored and compared periodically with the updated date of each file.
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Compare detection methods
 
 - **A** monitors protocols, not file content — it won't detect tampering.
@@ -663,7 +663,7 @@ b) Inspecting and filtering HTTP requests
 c) Managing user authentication and authorization
 d) Scanning malware on a web server
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Define WAF
 
 A **Web Application Firewall (WAF)** operates at the application layer (Layer 7) and analyzes **HTTP/HTTPS traffic** to detect and block malicious requests such as SQL injection, cross-site scripting (XSS), and other web attacks.
@@ -683,7 +683,7 @@ b) It is an email sent from a spoofed email address without authorization.
 c) It matches the sender mail server IP address with the information from the domain server and accepts or rejects email.
 d) It sends an email to the address of a specific person instead of sending them to multiple email addresses.
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Define SPF
 
 **Sender Policy Framework (SPF)** is an email authentication protocol. The domain owner publishes a DNS record listing **authorized mail server IP addresses**. When an email is received, the receiving server checks whether the sending server's IP is listed in the sender domain's SPF record — if not, the email can be rejected or flagged as spam.
@@ -703,7 +703,7 @@ b) Microservices Architecture
 c) Serverless Architecture
 d) Service-Oriented Architecture (SOA)
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Define each architecture
 
 - **Event-Driven**: components communicate by producing and consuming events.
@@ -726,7 +726,7 @@ b) The instruction coverage rate and the branch coverage rate are automatically 
 c) The source code is analyzed to find out if grammatical errors or logical errors exist in a program.
 d) The test data of the specified conditions and the program input files are generated automatically.
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Define static vs. dynamic analysis
 
 - **Static analysis**: examines source code **without executing it** — looks for syntax errors, code smells, potential bugs.
@@ -750,7 +750,7 @@ b) Integration test
 c) Performance test
 d) Unit test
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Define each test type
 
 - **Unit test**: tests individual functions or modules in isolation.
@@ -773,7 +773,7 @@ b) Forward engineering
 c) Re-engineering
 d) Reverse engineering
 ?
-**Answer: D**
+d) Bitwise XOR operation with 00001111.
 ### Step 1: Define the terms
 
 - **Forward engineering**: going from a design/model to code (the normal direction).
@@ -796,7 +796,7 @@ b) A fixed-length period dedicated to developing a product increment
 c) A self-organizing team responsible for product development
 d) List of tasks and features the Scrum team has yet to complete
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Review Scrum terminology
 
 - **Daily Scrum**: the short daily stand-up meeting (option A).
@@ -819,7 +819,7 @@ b) A time-phased budget that estimates the total cost of a project
 c) An authorized budget for the planned work
 d) Realized cost incurred for the work performed on an activity during a specific time period
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Review Earned Value Management (EVM) terms
 
 | Term | Definition |
@@ -844,7 +844,7 @@ b) The effort of the project is estimated based on the duration of the project.
 c) The size of the software and duration of the project are estimated based on the effort of the project.
 d) The size of the software and effort of the project are estimated based on the duration of the project.
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Define COCOMO
 
 The **Constructive Cost Model (COCOMO)** estimates software project effort (person-months) and duration based on the **size of the software**, typically measured in thousands of lines of code (KLOC) or function points.
@@ -870,7 +870,7 @@ b) 2.1
 c) 3.0
 d) 3.6
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Calculate total service hours per month
 
 $$30 \text{ days} \times 14 \text{ hours/day} = 420 \text{ hours}$$
@@ -890,7 +890,7 @@ b) MTD < RTO
 c) RPO <= MTD
 d) RTO <= MTD
 ?
-**Answer: D**
+d) Bitwise XOR operation with 00001111.
 ### Step 1: Define the terms
 
 - **MTD (Maximum Tolerable Downtime)**: the longest time a business can survive without a service.
@@ -916,7 +916,7 @@ b) Standardizing documents
 c) Taking measures to ensure the confidentiality of documents
 d) Updating documents without delay as changes are made in the system
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Focus on the audit goal
 
 The question asks specifically about **information leakage and unauthorized use** — these are **confidentiality** concerns.
@@ -939,7 +939,7 @@ b) Benchmarking
 c) Enterprise architecture
 d) IT portfolio
 ?
-**Answer: D**
+d) Bitwise XOR operation with 00001111.
 ### Step 1: Define each technique
 
 - **3C analysis**: analyzes Company, Customer, and Competitor — a strategic marketing framework.
@@ -962,7 +962,7 @@ b) To represent processes by using data flows, sources and sinks of data, data s
 c) To represent processes from multiple viewpoints, some purpose-specific modeling methods are used, and each model is depicted by using standardized notation rules for object modeling.
 d) To thoroughly represent the functions of a process, the events that occur in response to a single request are described by using the conditional branch format.
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Identify each description's methodology
 
 - **A** describes **ER diagrams** (entity-relationship modeling).
@@ -981,7 +981,7 @@ b) To customize some of the functions that are provided by a cloud service for t
 c) To provide an environment where data and application software are linked and interoperable between a cloud service for the exclusive use of a company and a general-purpose cloud service
 d) To separately provide the service content of a cloud service as paid services and free services
 ?
-**Answer: C**
+c) Bitwise OR operation with 00001111.
 ### Step 1: Define hybrid cloud
 
 A **hybrid cloud** combines a **private cloud** (dedicated to one organization) with a **public cloud** (general-purpose), with integration and interoperability between them. Organizations can keep sensitive workloads private while leveraging the scalability of the public cloud.
@@ -1001,7 +1001,7 @@ b) It refers to a certificate that enables commercial trading of the green power
 c) It refers to international standards concerning environmental labels that are certified by a third party on the basis of certain criteria.
 d) It refers to mass promotion of the details of environmental protection activities and raising funds for environmental protection from investors.
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Define green procurement
 
 **Green procurement** (or environmentally preferable purchasing) is the practice of buying products and services that have a reduced environmental impact compared to alternatives — considering the full supply chain, not just price and quality.
@@ -1025,7 +1025,7 @@ b) Demand is occasional, and exploiting new demand is key to success. Conviction
 c) Demand reaches a peak, and the differentiation of the product and segmentation of the market become clear. The competition between competitors also intensifies, and it becomes important to add new product types and reduce costs.
 d) The market starts to understand the value of the product. Both the product line and distribution channels need to be expanded. This stage sees an increase in sales and also requires investment.
 ?
-**Answer: D**
+d) Bitwise XOR operation with 00001111.
 ### Step 1: Review product life cycle stages
 
 | Stage | Characteristics |
@@ -1053,7 +1053,7 @@ b) It determines a price by adding a certain margin to the manufacturing cost an
 c) It determines a price that ensures a certain profit margin after all costs are covered on the basis of a target volume of sales.
 d) It determines an appealing price by researching the quality and price that customers accept.
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Define cost-plus pricing
 
 **Cost-plus pricing** is a straightforward method: calculate the total cost of producing a product, then add a fixed markup (profit margin) to arrive at the selling price.
@@ -1078,7 +1078,7 @@ b) Employees' skills and behavior characteristics are grasped, and management su
 c) Intellectual assets of individuals, such as know-how and experience, are shared across the organization to be used for creative work.
 d) The entire series of business operations, from purchasing and production to sales and distribution, is reexamined both within the company and among companies in view of total optimization in order to shorten delivery times and minimize inventory.
 ?
-**Answer: D**
+d) Bitwise XOR operation with 00001111.
 ### Step 1: Define SCM
 
 **Supply Chain Management (SCM)** involves coordinating and optimizing the flow of goods, information, and finances across the entire supply chain — from raw material suppliers through manufacturing, distribution, and delivery to the end customer.
@@ -1101,7 +1101,7 @@ b) Developing new products or products that enable differentiation from other co
 c) Making innovative reforms in business processes
 d) Strategically managing business with technology as the core
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Define product innovation
 
 In technology management, **product innovation** refers to creating **new or significantly improved products** — either entirely new offerings or products that stand out from competitors through differentiation.
@@ -1124,7 +1124,7 @@ b) The number of required components is calculated on the basis of the standard 
 c) The production of a product is initiated after an order from a customer is received.
 d) Work instructions and transport instructions are provided by using a worksheet.
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Define MRP
 
 **Material Requirements Planning (MRP)** is a production planning system that calculates the materials and components needed to manufacture a product. It uses the **Master Production Schedule (standard production plan)** along with the **Bill of Materials (BOM)** to determine what components are required, in what quantities, and when.
@@ -1147,7 +1147,7 @@ b) Improving the efficiency of meter reading work through automatic meter readin
 c) Increasing awareness of power-saving through the visualization of the amount of power consumption
 d) Restraining peak power by controlling power demand through the use of demand response
 ?
-**Answer: A**
+a) Bitwise AND operation with 11110000.
 ### Step 1: Review smart meter capabilities
 
 Smart meters can:
@@ -1170,7 +1170,7 @@ b) To encourage the meeting participants to express their opinions and organize 
 c) To offer specialized support for meeting administration, such as adjusting the schedule, preparing materials, or taking minutes.
 d) To provide advice only on discussions related to specific areas in which the facilitator specializes, such as technical or legal fields
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Define a facilitator
 
 A **facilitator** guides the process of a meeting — helping participants communicate, stay on topic, and reach conclusions — without imposing their own agenda. The key qualities are **neutrality** and **impartiality**.
@@ -1193,7 +1193,7 @@ b) It is a method aimed at analyzing data sets, finding unsuspected relationship
 c) It is a methodology for improving performance by systematically removing unnecessary data.
 d) It is a technique for analyzing and improving business processes by using knowledge that is extracted from event logs.
 ?
-**Answer: D**
+d) Bitwise XOR operation with 00001111.
 ### Step 1: Define process mining
 
 **Process mining** uses **event log data** (records of activities in information systems) to reconstruct, analyze, and improve actual business processes. It reveals how processes really execute — not how they are supposed to work.
@@ -1216,7 +1216,7 @@ b) 20,000
 c) 21,000
 d) 36,000
 ?
-**Answer: B**
+b) Bitwise NAND operation with 11110000.
 ### Step 1: Recall the straight-line depreciation formula
 
 $$\text{Annual Depreciation} = \frac{\text{Cost} - \text{Salvage Value}}{\text{Useful Life}}$$

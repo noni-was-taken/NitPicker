@@ -205,8 +205,9 @@ const requiresVisualContent = (
   containsMarkdownTable: boolean,
   tableMarkdown: string | null,
 ): boolean => {
+  // If the question has an inline image reference, it can render an image container — don't exclude it.
   if (questionImagePath) {
-    return true;
+    return false;
   }
 
   // If the question has a markdown table, it can be rendered — don't exclude it.
@@ -357,6 +358,23 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
       return;
     }
 
+    // Detect inline bracket image references like [2025A_FE-S_4.png]
+    const inlineImageMatch = line.match(/^\[([^\]]+\.(?:png|jpg|jpeg|gif|webp|svg))\]$/i);
+    if (inlineImageMatch) {
+      if (!firstImagePath) {
+        // Build a root-relative URL: strip the leading ../../ from the vault glob path,
+        // then replace the filename with images/<imagefile>.
+        // e.g. ../../philnits-vault/2025/2025A_FE-S_4.md -> /philnits-vault/2025/images/2025A_FE-S_4.png
+        const rootRelativeDir = normalizedPath
+          .replace(/^\.\.\/\.\.\//, "/")
+          .split("/")
+          .slice(0, -1)
+          .join("/");
+        firstImagePath = `${rootRelativeDir}/images/${inlineImageMatch[1]}`;
+      }
+      return;
+    }
+
     const option = parseOptionPrefix(line);
     if (option) {
       optionLines.push(`${option.key}. ${option.text}`);
@@ -444,7 +462,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
         questionNumber: question.questionNumber,
         questionText: question.questionText,
         tableText: question.tableMarkdown,
-        questionImagePath: null,
+        questionImagePath: question.questionImagePath,
         options: options.map((option) => ({
           key: option.key,
           text: option.text,

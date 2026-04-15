@@ -19,6 +19,7 @@ type PreviousExamQuestion = {
   subjectCategory: CategoryName | "Uncategorized";
   questionText: string;
   tableText: string | null;
+  questionImagePath: string | null;
   options: { key: string; text: string }[];
   correctOption: string;
   correctOptionText: string | null;
@@ -360,15 +361,32 @@ const parseVaultQuestion = (
   const questionParts: string[] = [];
   const options: { key: string; text: string }[] = [];
   let currentOptionIndex = -1;
+  let firstImagePath: string | null = null;
 
   bodyLines.forEach((rawLine, lineIndex) => {
     const line = rawLine.trim();
-    if (!line || isVaultCommentLine(line) || /^!\[\[/.test(line)) {
+    if (!line || isVaultCommentLine(line)) {
+      return;
+    }
+
+    // Skip Obsidian-style image embeds, but capture the path.
+    if (/^!\[\[/.test(line)) {
       return;
     }
 
     // Skip lines that belong to an extracted table.
     if (tableLineIndices.has(lineIndex)) {
+      return;
+    }
+
+    // Detect inline bracket image references like [2025A_FE-S_4.png]
+    const inlineImageMatch = line.match(/^\[([^\]]+\.(?:png|jpg|jpeg|gif|webp|svg))\]$/i);
+    if (inlineImageMatch) {
+      if (!firstImagePath) {
+        const normalizedPath = sourcePath.replace(/\\/g, "/");
+        const sourceDir = normalizedPath.split("/").slice(0, -1).join("/");
+        firstImagePath = `${sourceDir}/images/${inlineImageMatch[1]}`;
+      }
       return;
     }
 
@@ -421,6 +439,7 @@ const parseVaultQuestion = (
     subjectCategory,
     questionText,
     tableText,
+    questionImagePath: firstImagePath,
     options,
     correctOption,
     correctOptionText: correctChoice?.text ?? null,
@@ -597,6 +616,28 @@ export default function PreviousExamsPage() {
                                             >
                                               {question.tableText}
                                             </ReactMarkdown>
+                                          </div>
+                                        </div>
+                                      ) : null}
+                                      {question.questionImagePath ? (
+                                        <div className="question-image-container mt-2 border border-black/25 dark:border-white/25 bg-black/2 dark:bg-white/5 overflow-hidden">
+                                          <img
+                                            src={question.questionImagePath}
+                                            alt={`Diagram for question ${question.questionNumber}`}
+                                            className="max-w-full h-auto block"
+                                            onError={(e) => {
+                                              const target = e.currentTarget;
+                                              target.style.display = "none";
+                                              const placeholder = target.nextElementSibling as HTMLElement | null;
+                                              if (placeholder) placeholder.style.display = "flex";
+                                            }}
+                                          />
+                                          <div
+                                            className="hidden items-center justify-center p-4 text-xs opacity-60 gap-2"
+                                            style={{ display: "none" }}
+                                          >
+                                            <span>📷</span>
+                                            <span>Image pending: {question.questionImagePath.split("/").pop()}</span>
                                           </div>
                                         </div>
                                       ) : null}

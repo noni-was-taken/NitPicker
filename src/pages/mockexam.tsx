@@ -20,13 +20,18 @@ import {
 import "katex/dist/katex.min.css";
 
 const resolveChoiceImageUrl = (imagePath: string): string => {
-    const normalizedPath = imagePath.trim().replace(/\\/g, "/").replace(/^\.?\//, "");
+    const normalizedPath = imagePath.trim().replace(/\\/g, "/");
 
     if (normalizedPath.startsWith("http://") || normalizedPath.startsWith("https://") || normalizedPath.startsWith("/")) {
         return normalizedPath;
     }
 
-    return `${MOCK_EXAM_IMAGE_BASE_PATH}${normalizedPath}`;
+    const withoutTraversal = normalizedPath.replace(/^(?:\.\.\/)+/, "").replace(/^\.\//, "");
+    if (withoutTraversal.startsWith("philnits-vault/")) {
+        return `/${withoutTraversal}`;
+    }
+
+    return `${MOCK_EXAM_IMAGE_BASE_PATH}${withoutTraversal}`;
 };
 
 export default function MockExamPage() {

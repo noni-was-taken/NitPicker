@@ -1,4 +1,5 @@
 import {
+  attachSessionSchema,
   allTopics,
   categoryTopics,
   type CategoryName,
@@ -9,6 +10,7 @@ import {
 
 type ParsedVaultQuestion = {
   sourcePath: string;
+  sourceYear: string;
   examType: MockExamSettings["examType"];
   examCode: string;
   questionNumber: string;
@@ -20,6 +22,12 @@ type ParsedVaultQuestion = {
   questionImagePath: string | null;
   containsMarkdownTable: boolean;
   tableMarkdown: string | null;
+};
+
+const shouldIgnoreSourcePath = (sourcePath: string): boolean => {
+  const normalizedPath = sourcePath.replace(/\\/g, "/");
+  const fileName = normalizedPath.split("/").pop()?.toLowerCase() ?? "";
+  return fileName.endsWith("_questions.md");
 };
 
 const isString = (value: unknown): value is string => typeof value === "string";
@@ -224,8 +232,9 @@ const toQuestionImagePath = (sourcePath: string, imageFileName: string): string 
   const sourceDir = sourcePath.split("/").slice(0, -1).join("/");
   const candidate = `${sourceDir}/${normalizedFileName}`;
 
-  // The app currently resolves relative media from project root at runtime.
-  return candidate.replace(/^\.\//, "");
+  // Resolve to a root-relative path so runtime routes do not break image URLs.
+  const rootRelativePath = candidate.replace(/^(?:\.\.\/)+/, "/").replace(/^\.\//, "/");
+  return rootRelativePath.startsWith("/") ? rootRelativePath : `/${rootRelativePath}`;
 };
 
 const parseOptionPrefix = (line: string): { key: string; text: string } | null => {
@@ -262,6 +271,10 @@ const extractOptionsFromLines = (optionLines: string[]): { key: string; text: st
 };
 
 const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedVaultQuestion | null => {
+  if (shouldIgnoreSourcePath(sourcePath)) {
+    return null;
+  }
+
   const normalizedPath = sourcePath.replace(/\\/g, "/");
   const fileName = normalizedPath.split("/").pop() ?? "";
   const fileStem = fileName.replace(/\.md$/i, "");
@@ -411,9 +424,11 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
   const split = headingId.match(/^(.*?)[_-](\d+(?:\.\d+)?)$/);
   const examCode = split?.[1] ?? fileStem;
   const questionNumber = split?.[2] ?? headingId;
+  const sourceYear = normalizedPath.match(/\/philnits-vault\/(\d{4})\//)?.[1] ?? "Unknown";
 
   return {
     sourcePath: normalizedPath,
+    sourceYear,
     examType,
     examCode,
     questionNumber,
@@ -459,6 +474,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
       return {
         id: `${question.examCode}::${question.questionNumber}::${index}`,
         pdfName: `${question.examCode}.md`,
+        sourceYear: question.sourceYear,
         questionNumber: question.questionNumber,
         questionText: question.questionText,
         tableText: question.tableMarkdown,
@@ -494,7 +510,7 @@ export const buildMockExamSession = (settings: MockExamSettings): MockExamSessio
   const pool = buildQuestionPool(settings);
   const selectedQuestions = shuffleQuestions(pool).slice(0, Math.min(pool.length, settings.questionCount));
 
-  return {
+  return attachSessionSchema({
     sessionId: `mock-session-${Date.now()}`,
     createdAtMs: Date.now(),
     startedAtMs: Date.now(),
@@ -503,7 +519,7 @@ export const buildMockExamSession = (settings: MockExamSettings): MockExamSessio
     currentQuestionIndex: 0,
     answers: {},
     hintsUsed: 0,
-  };
+  });
 };
 
 export const getEligibleQuestionCount = (settings: MockExamSettings): number => buildQuestionPool(settings).length;

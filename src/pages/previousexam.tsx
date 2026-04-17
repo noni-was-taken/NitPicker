@@ -26,6 +26,12 @@ type PreviousExamQuestion = {
   answerExplanation: string | null;
 };
 
+const shouldIgnoreSourcePath = (sourcePath: string): boolean => {
+  const normalizedPath = sourcePath.replace(/\\/g, "/");
+  const fileName = normalizedPath.split("/").pop()?.toLowerCase() ?? "";
+  return fileName.endsWith("_questions.md");
+};
+
 const stripInlineMarkdown = (text: string): string =>
   text
     .replace(/\*\*/g, "")
@@ -289,6 +295,10 @@ const parseVaultQuestion = (
   sourcePath: string,
   rawMarkdown: string,
 ): PreviousExamQuestion | null => {
+  if (shouldIgnoreSourcePath(sourcePath)) {
+    return null;
+  }
+
   const normalizedPath = sourcePath.replace(/\\/g, "/");
   const lines = rawMarkdown.split(/\r?\n/);
 
@@ -369,8 +379,17 @@ const parseVaultQuestion = (
       return;
     }
 
-    // Skip Obsidian-style image embeds, but capture the path.
-    if (/^!\[\[/.test(line)) {
+    // Capture Obsidian-style image embeds and keep only the first image path.
+    const embedImageMatch = line.match(/^!\[\[([^\]]+)\]\]$/);
+    if (embedImageMatch) {
+      if (!firstImagePath) {
+        const normalizedPath = sourcePath.replace(/\\/g, "/");
+        const sourceDir = normalizedPath.split("/").slice(0, -1).join("/");
+        const rootRelative = `${sourceDir}/${embedImageMatch[1].trim().replace(/\\/g, "/")}`
+          .replace(/^(?:\.\.\/)+/, "/")
+          .replace(/^\.\//, "/");
+        firstImagePath = rootRelative.startsWith("/") ? rootRelative : `/${rootRelative}`;
+      }
       return;
     }
 
@@ -385,7 +404,10 @@ const parseVaultQuestion = (
       if (!firstImagePath) {
         const normalizedPath = sourcePath.replace(/\\/g, "/");
         const sourceDir = normalizedPath.split("/").slice(0, -1).join("/");
-        firstImagePath = `${sourceDir}/images/${inlineImageMatch[1]}`;
+        const rootRelative = `${sourceDir}/images/${inlineImageMatch[1]}`
+          .replace(/^(?:\.\.\/)+/, "/")
+          .replace(/^\.\//, "/");
+        firstImagePath = rootRelative.startsWith("/") ? rootRelative : `/${rootRelative}`;
       }
       return;
     }

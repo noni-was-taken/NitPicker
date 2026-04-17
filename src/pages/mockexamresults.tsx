@@ -132,6 +132,10 @@ export default function MockExamResultsPage() {
     false,
   );
   const wrongQuestions = result.wrongQuestions ?? [];
+  const sourceYearsLabel =
+    result.sourceYears?.length && result.sourceYears.length > 0
+      ? result.sourceYears.join(", ")
+      : "Unknown";
 
   const toggleCategory = (categoryName: string) => {
     setOpenCategories((current) => ({
@@ -252,6 +256,12 @@ export default function MockExamResultsPage() {
                   <p className="text-sm opacity-70">Topics Selected</p>
                   <p className="text-lg sm:text-xl font-bold text-right">
                     {result.selectedTopicCount}
+                  </p>
+                </div>
+                <div className="flex items-baseline justify-between border-b pb-2 gap-4">
+                  <p className="text-sm opacity-70">Source Year(s)</p>
+                  <p className="text-lg sm:text-xl font-bold text-right">
+                    {sourceYearsLabel}
                   </p>
                 </div>
               </div>
@@ -391,7 +401,8 @@ export default function MockExamResultsPage() {
                             <div className="flex flex-col gap-1">
                               <p className="font-bold text-sm md:text-base">
                                 #{wrongQuestion.questionNumber} ·{" "}
-                                {wrongQuestion.subjectTopic}
+                                {wrongQuestion.subjectTopic} ·{" "}
+                                {wrongQuestion.sourceYear ?? "Unknown"}
                               </p>
                               <div className="text-sm md:text-base leading-relaxed prose prose-sm max-w-none prose-p:my-1">
                                 <ReactMarkdown

@@ -22,11 +22,12 @@ export default function MockExamPrepPage() {
   const navigate = useNavigate();
   const [examType, setExamType] = useState<"AM EXAM" | "PM EXAM">("AM EXAM");
   const [isTimed, setIsTimed] = useState(true);
-  const [durationMinutes, setDurationMinutes] = useState<number>(UI_LIMITS.defaultDurationMinutes);
-  const [questionCount, setQuestionCount] = useState<number>(UI_LIMITS.defaultQuestionCount);
+  const [durationInput, setDurationInput] = useState<string>(String(UI_LIMITS.defaultDurationMinutes));
+  const [questionCountInput, setQuestionCountInput] = useState<string>(String(UI_LIMITS.defaultQuestionCount));
   const [instantAnswers, setInstantAnswers] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>(allTopics);
   const [startError, setStartError] = useState<string | null>(null);
+  const [inputValidationError, setInputValidationError] = useState<string | null>(null);
   const [hasActiveSession, setHasActiveSession] = useState(() => {
     const session = loadMockExamSession();
     return Boolean(session && session.questions.length > 0);
@@ -35,7 +36,27 @@ export default function MockExamPrepPage() {
   const [isStartingExam, setIsStartingExam] = useState(false);
   const formControlClassName = "h-6 w-6 md:h-4 md:w-4 accent-black dark:accent-white shrink-0 cursor-pointer";
   const closeStartErrorModal = () => setStartError(null);
+  const closeInputValidationModal = () => setInputValidationError(null);
   const closeResumeModal = () => setShowResumeModal(false);
+
+  const parseWholeNumber = (rawValue: string): number | null => {
+    const trimmed = rawValue.trim();
+    if (!trimmed || !/^\d+$/.test(trimmed)) {
+      return null;
+    }
+
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const getQuestionCountValidationError = (rawValue: string): string | null => {
+    const parsed = parseWholeNumber(rawValue);
+    if (parsed === null || parsed < 1 || parsed > UI_LIMITS.maxQuestionCount) {
+      return `Input not allowed. Questions must be between 1 and ${UI_LIMITS.maxQuestionCount}.`;
+    }
+
+    return null;
+  };
 
   const handleStartExam = (forceStartNew = false) => {
     setIsStartingExam(true);
@@ -52,8 +73,30 @@ export default function MockExamPrepPage() {
       setShowResumeModal(false);
     }
     
-    const safeQuestionCount = questionCount;
-    const safeDurationMin = durationMinutes;
+    const questionCountValidationError = getQuestionCountValidationError(questionCountInput);
+    if (questionCountValidationError) {
+      setInputValidationError(questionCountValidationError);
+      setIsStartingExam(false);
+      return;
+    }
+
+    if (selectedTopics.length === 0) {
+      setInputValidationError("You have to choose at least 1 topic.");
+      setIsStartingExam(false);
+      return;
+    }
+
+    const safeQuestionCount = Number(questionCountInput);
+    const parsedDurationMinutes = parseWholeNumber(durationInput);
+    if (isTimed && (parsedDurationMinutes === null || parsedDurationMinutes < 1)) {
+      setInputValidationError("Input not allowed. Duration must be at least 1 minute.");
+      setIsStartingExam(false);
+      return;
+    }
+
+    const safeDurationMin = isTimed
+      ? (parsedDurationMinutes ?? UI_LIMITS.defaultDurationMinutes)
+      : UI_LIMITS.defaultDurationMinutes;
     
     const examSettings: MockExamSettings = {
       examType,
@@ -72,7 +115,7 @@ export default function MockExamPrepPage() {
       return;
     }
 
-    if (session.questions.length < questionCount) {
+    if (session.questions.length < safeQuestionCount) {
       setStartError(
         `Only ${session.questions.length} matching questions are available. Reduce the question count or broaden topic selection.`,
       );
@@ -99,8 +142,8 @@ export default function MockExamPrepPage() {
 
   const applyActualExamDefaults = () => {
     setIsTimed(true);
-    setDurationMinutes(UI_LIMITS.defaultDurationMinutes);
-    setQuestionCount(UI_LIMITS.defaultQuestionCount);
+    setDurationInput(String(UI_LIMITS.defaultDurationMinutes));
+    setQuestionCountInput(String(UI_LIMITS.defaultQuestionCount));
     setInstantAnswers(false);
     setSelectedTopics(allTopics);
   };
@@ -108,17 +151,15 @@ export default function MockExamPrepPage() {
   const toggleTopic = (topic: string) => {
     setSelectedTopics((currentTopics) => {
       const isSelected = currentTopics.includes(topic);
+      const nextTopics = isSelected
+        ? currentTopics.filter((currentTopic) => currentTopic !== topic)
+        : [...currentTopics, topic];
 
-      if (isSelected) {
-        // At least one topic should remain selected.
-        if (currentTopics.length === 1) {
-          return currentTopics;
-        }
-
-        return currentTopics.filter((currentTopic) => currentTopic !== topic);
+      if (nextTopics.length === 0) {
+        setInputValidationError("You have to choose at least 1 topic.");
       }
 
-      return [...currentTopics, topic];
+      return nextTopics;
     });
   };
 
@@ -127,19 +168,15 @@ export default function MockExamPrepPage() {
 
     setSelectedTopics((currentTopics) => {
       const hasAllTopics = topicsInCategory.every((topic) => currentTopics.includes(topic));
+      const nextTopics = hasAllTopics
+        ? currentTopics.filter((topic) => !topicsInCategory.includes(topic))
+        : [...new Set([...currentTopics, ...topicsInCategory])];
 
-      if (hasAllTopics) {
-        const remainingTopics = currentTopics.filter((topic) => !topicsInCategory.includes(topic));
-
-        // Keep at least one selected topic across all categories.
-        if (remainingTopics.length === 0) {
-          return currentTopics;
-        }
-
-        return remainingTopics;
+      if (nextTopics.length === 0) {
+        setInputValidationError("You have to choose at least 1 topic.");
       }
 
-      return [...new Set([...currentTopics, ...topicsInCategory])];
+      return nextTopics;
     });
   };
 
@@ -264,26 +301,18 @@ export default function MockExamPrepPage() {
                     <span className="text-sm lg:text-base">Duration (minutes)</span>
                     <input
                       type="text"
-                      value={durationMinutes}
+                      inputMode="numeric"
+                      value={durationInput}
                       onChange = {(e) => {
                         const value = e.target.value;
-                        
+
                         const numericOnly = value.replace(/\D/g, "");
-                        if (!numericOnly) {
-                          setDurationMinutes(UI_LIMITS.defaultDurationMinutes);
-                          return;
-                        }
-                        
-                        const parsedCount = Number(numericOnly);
-                        
-                        const clamped = Math.min(UI_LIMITS.maxDurationMinutes, Math.max(1, parsedCount));
-                        
-                        setDurationMinutes(clamped);
+                        setDurationInput(numericOnly);
                       }}
                       className="form-input"
                     />
                   </label>
-                  <p className="text-xs opacity-70">Default: {UI_LIMITS.defaultDurationMinutes} minutes. Maximum: {UI_LIMITS.maxDurationMinutes} minutes.</p>
+                  <p className="text-xs opacity-70">Default: {UI_LIMITS.defaultDurationMinutes} minutes. Minimum: 1 minute.</p>
                 </section>
                 
                 {/* QUESTIONS */}
@@ -293,21 +322,19 @@ export default function MockExamPrepPage() {
                     <span className="text-sm lg:text-base">How many questions?</span>
                     <input
                       type="text"
-                      value={questionCount}
+                      inputMode="numeric"
+                      value={questionCountInput}
                       onChange={(e) => {
                         const value = e.target.value;
-                        
+
                         const numericOnly = value.replace(/\D/g, "");
-                        if (!numericOnly) {
-                          setQuestionCount(UI_LIMITS.defaultQuestionCount);
-                          return;
+                        setQuestionCountInput(numericOnly);
+                      }}
+                      onBlur={() => {
+                        const validationError = getQuestionCountValidationError(questionCountInput);
+                        if (validationError) {
+                          setInputValidationError(validationError);
                         }
-                        
-                        const parsedCount = Number(numericOnly);
-                        
-                        const clamped = Math.min(UI_LIMITS.maxQuestionCount, Math.max(1, parsedCount));
-                        
-                        setQuestionCount(clamped);
                       }}
                       className="form-input"
                     />
@@ -332,7 +359,7 @@ export default function MockExamPrepPage() {
               <section className="flex flex-col gap-4">
                 <h2 className="text-2xl font-light">Categories & Topics</h2>
                 <p className="text-xs opacity-70">
-                  Default: all topics selected. At least one topic must stay selected.
+                  Default: all topics selected. You can deselect all topics, but you need at least one to start.
                 </p>
 
                 {isStartingExam ? <SkeletonLoader lines={5} /> : null}
@@ -374,6 +401,36 @@ export default function MockExamPrepPage() {
               <button
                 type="button"
                 onClick={closeStartErrorModal}
+                className="btn-outline px-5 py-2"
+              >
+                CLOSE
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {inputValidationError ? (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mock-exam-input-validation-title"
+          onClick={closeInputValidationModal}
+        >
+          <div
+            className="modal-panel"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="mock-exam-input-validation-title" className="text-xl md:text-2xl font-bold mb-3 dark:text-white">
+              Input Not Allowed
+            </h2>
+            <p className="text-sm md:text-base text-red-700 leading-relaxed">{inputValidationError}</p>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={closeInputValidationModal}
                 className="btn-outline px-5 py-2"
               >
                 CLOSE

@@ -52,6 +52,7 @@ export type MockExamOption = {
 export type MockExamQuestion = {
   id: string;
   pdfName: string;
+  sourceYear: string;
   questionNumber: string;
   questionText: string;
   tableText: string | null;
@@ -64,6 +65,7 @@ export type MockExamQuestion = {
 };
 
 export type MockExamSession = {
+  schemaVersion: number;
   sessionId: string;
   createdAtMs: number;
   startedAtMs: number;
@@ -89,6 +91,7 @@ export type CategoryBreakdown = {
 
 export type WrongQuestionReview = {
   id: string;
+  sourceYear: string;
   questionNumber: string;
   subjectTopic: string;
   questionText: string;
@@ -102,6 +105,7 @@ export type WrongQuestionReview = {
 export type MockExamResult = {
   completedAtMs: number;
   settings: MockExamSettings;
+  sourceYears: string[];
   totalQuestions: number;
   correctAnswers: number;
   totalTimeSeconds: number;
@@ -115,6 +119,56 @@ export type MockExamResult = {
 
 const SESSION_STORAGE_KEY = "ofa.mockExam.currentSession";
 const RESULT_STORAGE_KEY = "ofa.mockExam.latestResult";
+const SESSION_SCHEMA_VERSION = 3;
+
+const extractYearFromText = (value: string | null | undefined): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  const matchedYear = value.match(/\b(19|20)\d{2}\b/)?.[0];
+  return matchedYear ?? null;
+};
+
+const resolveQuestionSourceYear = (question: Pick<MockExamQuestion, "id" | "pdfName" | "sourceYear">): string => {
+  const explicitSourceYear = typeof question.sourceYear === "string" ? question.sourceYear.trim() : "";
+  if (explicitSourceYear) {
+    return explicitSourceYear;
+  }
+
+  return extractYearFromText(question.pdfName) ?? extractYearFromText(question.id) ?? "Unknown";
+};
+
+type LegacyWrongQuestionReview = Omit<WrongQuestionReview, "sourceYear"> & {
+  sourceYear?: string;
+};
+
+type LegacyMockExamResult = Omit<MockExamResult, "sourceYears" | "wrongQuestions"> & {
+  sourceYears?: string[];
+  wrongQuestions?: LegacyWrongQuestionReview[];
+};
+
+const migrateMockExamResult = (result: LegacyMockExamResult): MockExamResult => {
+  const normalizedWrongQuestions: WrongQuestionReview[] = (result.wrongQuestions ?? []).map((wrongQuestion) => ({
+    ...wrongQuestion,
+    sourceYear: extractYearFromText(wrongQuestion.sourceYear) ?? extractYearFromText(wrongQuestion.id) ?? "Unknown",
+  }));
+
+  const normalizedSourceYears = (result.sourceYears ?? [])
+    .map((entry) => extractYearFromText(entry) ?? entry)
+    .filter((entry): entry is string => Boolean(entry && entry.trim().length > 0));
+
+  const sourceYears = (normalizedSourceYears.length > 0
+    ? [...new Set(normalizedSourceYears)]
+    : [...new Set(normalizedWrongQuestions.map((question) => question.sourceYear))]
+  ).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
+  return {
+    ...result,
+    sourceYears,
+    wrongQuestions: normalizedWrongQuestions,
+  } as MockExamResult;
+};
 
 const safeSave = (key: string, value: unknown) => {
   try {
@@ -144,6 +198,7 @@ const isMockExamSession = (value: unknown): value is MockExamSession => {
   const session = value as Partial<MockExamSession>;
 
   return (
+    session.schemaVersion === SESSION_SCHEMA_VERSION &&
     typeof session.sessionId === "string" &&
     typeof session.createdAtMs === "number" &&
     typeof session.startedAtMs === "number" &&
@@ -164,11 +219,17 @@ export const loadMockExamSession = (): MockExamSession | null => {
   const loaded = safeLoad<unknown>(SESSION_STORAGE_KEY);
 
   if (!isMockExamSession(loaded)) {
+    clearMockExamSession();
     return null;
   }
 
   return loaded;
 };
+
+export const attachSessionSchema = (session: Omit<MockExamSession, "schemaVersion">): MockExamSession => ({
+  ...session,
+  schemaVersion: SESSION_SCHEMA_VERSION,
+});
 
 export const clearMockExamSession = () => {
   try {
@@ -182,7 +243,15 @@ export const saveMockExamResult = (result: MockExamResult) => {
   safeSave(RESULT_STORAGE_KEY, result);
 };
 
-export const loadMockExamResult = (): MockExamResult | null => safeLoad<MockExamResult>(RESULT_STORAGE_KEY);
+export const loadMockExamResult = (): MockExamResult | null => {
+  const loaded = safeLoad<LegacyMockExamResult>(RESULT_STORAGE_KEY);
+
+  if (!loaded || typeof loaded !== "object") {
+    return null;
+  }
+
+  return migrateMockExamResult(loaded);
+};
 
 export const clearMockExamResult = () => {
   try {
@@ -239,6 +308,7 @@ export const computeMockExamResult = (
   for (const question of session.questions) {
     const selectedAnswer = answers[question.id];
     const isCorrect = selectedAnswer === question.correctOption;
+    const sourceYear = resolveQuestionSourceYear(question);
 
     if (!isCorrect) {
       const selectedChoice = question.options.find((choice) => choice.key === selectedAnswer);
@@ -246,6 +316,7 @@ export const computeMockExamResult = (
 
       wrongQuestions.push({
         id: question.id,
+        sourceYear,
         questionNumber: question.questionNumber,
         subjectTopic: question.subjectTopic,
         questionText: question.questionText,
@@ -322,9 +393,13 @@ export const computeMockExamResult = (
   const averageTimePerQuestionSeconds =
     totalQuestions === 0 ? 0 : Math.max(0, Math.round(totalTimeSeconds / totalQuestions));
 
+  const sourceYears = [...new Set(session.questions.map((question) => resolveQuestionSourceYear(question)))]
+    .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
   return {
     completedAtMs: Date.now(),
     settings: session.settings,
+    sourceYears,
     totalQuestions,
     correctAnswers,
     totalTimeSeconds,

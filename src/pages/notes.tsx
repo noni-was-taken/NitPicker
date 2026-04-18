@@ -44,11 +44,11 @@ export default function NotesPage() {
       <main className="flex-1 w-full flex items-start justify-center px-6 md:px-20">
         <div className="w-full max-w-7xl py-6 md:py-10">
           <div className="mb-8 text-center md:mb-10">
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white md:text-4xl">Featured Notes</h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 md:text-base">
+            <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white md:text-4xl">Featured Notes</h1>
+            <p className="mt-2 text-sm text-black dark:text-zinc-300 md:text-base">
               DM <a href="https://www.facebook.com/demonacolyte9123" className='font-bold underline '>Jose Miguel Carumba</a> on Facebook if you would like your notes to be featured
             </p>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 md:text-base">
+            <p className="mt-2 text-sm text-black dark:text-zinc-300 md:text-base">
               or email us at either{' '}
               {contactEmails.map((email, index) => (
                 <span key={email}>

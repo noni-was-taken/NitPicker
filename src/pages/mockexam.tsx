@@ -300,7 +300,7 @@ export default function MockExamPage() {
     });
 
     return (
-        <Layout className="py-10 md:py-0 md:min-h-screen md:w-full dark:text-white gap-4 md:gap-10 select-none">
+        <Layout className="py-10 md:py-0 md:min-h-screen md:w-full dark:text-white gap-4 md:gap-10">
 
                 <div className="w-[79vw] md:w-full flex justify-between md:px-10 items-center">
                     <button

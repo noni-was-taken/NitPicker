@@ -373,7 +373,7 @@ export default function HomePage() {
         <div className="mt-12 pt-8 border-t-2 border-zinc-950 dark:border-zinc-200 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div
             onClick={() => navigate('/previousexams')}
-            className="card-brut p-6 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5] transition-all cursor-pointer flex flex-col justify-between group"
+            className="card-brut p-6 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5] transition cursor-pointer flex flex-col justify-between group"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -397,7 +397,7 @@ export default function HomePage() {
 
           <div
             onClick={() => navigate('/notes')}
-            className="card-brut p-6 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5] transition-all cursor-pointer flex flex-col justify-between group"
+            className="card-brut p-6 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5] transition cursor-pointer flex flex-col justify-between group"
           >
             <div>
               <div className="flex items-center justify-between mb-3">

@@ -588,7 +588,7 @@ export default function MockExamPage() {
         <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800">
           <div
             style={{ width: `${totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0}%` }}
-            className="h-full bg-blue-600 dark:bg-blue-500 transition-all duration-300"
+            className="h-full bg-blue-600 dark:bg-blue-500 transition-[width] duration-300"
           />
         </div>
 
@@ -677,7 +677,7 @@ export default function MockExamPage() {
             <button
               type="button"
               onClick={handleToggleFlag}
-              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition-all duration-150 cursor-pointer border ${
+              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition duration-150 cursor-pointer border ${
                 isFlagged
                   ? "border-amber-500 bg-amber-400 text-zinc-950 dark:bg-amber-400 dark:text-zinc-950 shadow-[2px_2px_0px_0px_rgba(245,158,11,1)]"
                   : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-950 dark:hover:border-zinc-200"
@@ -694,7 +694,7 @@ export default function MockExamPage() {
             <button
               type="button"
               onClick={handleToggleBookmark}
-              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition-all duration-150 cursor-pointer border ${
+              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition duration-150 cursor-pointer border ${
                 isBookmarked
                   ? "border-amber-500 bg-amber-400 text-zinc-950 dark:bg-amber-400 dark:text-zinc-950 shadow-[2px_2px_0px_0px_rgba(245,158,11,1)]"
                   : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-950 dark:hover:border-zinc-200"
@@ -712,7 +712,7 @@ export default function MockExamPage() {
               type="button"
               onClick={handleUseHint}
               disabled={hintVisible}
-              className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition-all duration-150 cursor-pointer border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-950 dark:hover:border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition duration-150 cursor-pointer border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-950 dark:hover:border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed"
               title="Use 50/50 hint [H]"
               aria-label="Eliminate up to two incorrect options"
             >
@@ -725,7 +725,7 @@ export default function MockExamPage() {
             <button
               type="button"
               onClick={() => setIsNavigatorOpen((prev) => !prev)}
-              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition-all duration-150 cursor-pointer border ${
+              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold uppercase transition duration-150 cursor-pointer border ${
                 isNavigatorOpen
                   ? "border-blue-600 bg-blue-600 text-white dark:border-blue-400 dark:bg-blue-400 dark:text-zinc-950"
                   : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-950 dark:hover:border-zinc-200"
@@ -917,7 +917,7 @@ export default function MockExamPage() {
                 </span>
               </div>
               <div
-                className="group relative border-2 border-zinc-950/25 dark:border-zinc-200/25 bg-white dark:bg-zinc-900 p-3 flex flex-col items-center justify-center cursor-zoom-in transition-all hover:border-zinc-950 dark:hover:border-zinc-200"
+                className="group relative border-2 border-zinc-950/25 dark:border-zinc-200/25 bg-white dark:bg-zinc-900 p-3 flex flex-col items-center justify-center cursor-zoom-in transition hover:border-zinc-950 dark:hover:border-zinc-200"
                 onClick={() => setZoomedImageUrl(resolvedQuestionImageUrl)}
                 role="button"
                 tabIndex={0}
@@ -968,7 +968,7 @@ export default function MockExamPage() {
               const isCorrectOption = letter === currentQuestion.correctOption;
 
               // Compute Card Styling based on state
-              let cardClasses = "border-2 transition-all duration-150 p-3.5 sm:p-4 text-left flex items-start gap-3 sm:gap-4 ";
+              let cardClasses = "border-2 transition duration-150 p-3.5 sm:p-4 text-left flex items-start gap-3 sm:gap-4 ";
 
               if (!hasChoiceContent) {
                 cardClasses += "border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 opacity-40 cursor-not-allowed";

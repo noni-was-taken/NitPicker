@@ -96,7 +96,7 @@ const QuestionAccordionItem = React.memo(function QuestionAccordionItem({
   ), [question.questionText]);
 
   return (
-    <article className="border-2 border-zinc-950 dark:border-zinc-200 bg-white dark:bg-zinc-900 transition-all shadow-xs">
+    <article className="border-2 border-zinc-950 dark:border-zinc-200 bg-white dark:bg-zinc-900 transition shadow-xs">
       {/* Question Accordion Header */}
       <button
         type="button"
@@ -225,7 +225,7 @@ const QuestionAccordionItem = React.memo(function QuestionAccordionItem({
                     return (
                       <div
                         key={`${question.id}-${option.key}`}
-                        className={`p-3.5 border-2 transition-all ${
+                        className={`p-3.5 border-2 transition ${
                           isCorrect
                             ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 shadow-xs"
                             : "border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/30 text-zinc-800 dark:text-zinc-200"
@@ -612,7 +612,7 @@ export default function PreviousExamsPage() {
                     key={category}
                     type="button"
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-2.5 py-1 font-mono font-semibold border transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 font-mono font-semibold border transition cursor-pointer ${
                       isActive
                         ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
                         : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900"
@@ -636,7 +636,7 @@ export default function PreviousExamsPage() {
                     key={examType}
                     type="button"
                     onClick={() => setSelectedExamType(examType)}
-                    className={`px-2.5 py-1 font-mono font-semibold border transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 font-mono font-semibold border transition cursor-pointer ${
                       isActive
                         ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
                         : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900"
@@ -716,7 +716,7 @@ export default function PreviousExamsPage() {
               <section
                 key={entry.year}
                 id={`year-section-${entry.year}`}
-                className="card-brut overflow-hidden scroll-mt-48 transition-all"
+                className="card-brut overflow-hidden scroll-mt-48 transition"
               >
                 {/* Year Header Accordion Button */}
                 <button

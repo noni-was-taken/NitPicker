@@ -301,7 +301,7 @@ const toQuestionImagePath = (sourcePath: string, imageFileName: string): string 
 };
 
 const parseOptionPrefix = (line: string, sourcePath?: string): MockExamOption | null => {
-  const trimmed = line.trim();
+  const trimmed = line.trim().replace(/^\*\*\s*/, ""); // vault sometimes bolds options: **a) text**
   const match = trimmed.match(/^([A-Da-d])[.)]\s*(.*)$/);
   if (!match) {
     return null;
@@ -333,11 +333,9 @@ const parseOptionPrefix = (line: string, sourcePath?: string): MockExamOption | 
     }
   }
 
-  return {
-    key,
-    text: normalizeSpaces(stripInlineMarkdown(rawText)),
-    imagePath,
-  };
+  const text = normalizeSpaces(stripInlineMarkdown(rawText));
+  // Option screenshots are cropped copies of the text; only show one when there is no text.
+  return { key, text, imagePath: text ? null : imagePath };
 };
 
 const extractOptionsFromLines = (optionLines: string[], sourcePath?: string): MockExamOption[] => {

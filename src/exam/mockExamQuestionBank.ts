@@ -97,15 +97,19 @@ const shouldIgnoreSourcePath = (sourcePath: string): boolean => {
 
 const isString = (value: unknown): value is string => typeof value === "string";
 
+// Word "Symbol"-font characters survive in the vault as private-use codepoints (U+F0xx) that no
+// browser font draws. Map the known ones; anything else shows as "[symbol]" instead of a hex box.
+const LEGACY_SYMBOLS: Record<string, string> = {
+  "\uF02B": "+", "\uF02D": "−", "\uF03E": ">", "\uF06D": "µ",
+  "\uF049": "∩", "\uF055": "∪",
+  "\uF0A3": "≤", "\uF0B3": "≥", "\uF0B4": "×", "\uF0B8": "÷", "\uF0B9": "≠",
+  "\uF0AE": "→", "\uF0E0": "→", "\uF0DF": "←",
+  "\uF0D8": "¬", "\uF0D9": "∧", "\uF0DA": "∨",
+  "\uF0EC": "⎧", "\uF0ED": "⎨", "\uF0EE": "⎩",
+};
+
 const normalizeLegacySymbols = (text: string): string =>
-  text
-    .replace(/\uF0AE|\uF0E0/g, "→")
-    .replace(/\uF0DF/g, "←")
-    .replace(/\uF0A3/g, "≤")
-    .replace(/\uF0B3/g, "≥")
-    .replace(/\uF0B8/g, "÷")
-    .replace(/\uF0B4/g, "×")
-    .replace(/\uF0B9/g, "≠");
+  text.replace(/[\uE000-\uF8FF]/g, (ch) => LEGACY_SYMBOLS[ch] ?? "[symbol]");
 
 const stripInlineMarkdown = (text: string): string =>
   text
@@ -333,7 +337,7 @@ const parseOptionPrefix = (line: string, sourcePath?: string): MockExamOption | 
     }
   }
 
-  const text = normalizeSpaces(stripInlineMarkdown(rawText));
+  const text = normalizeLegacySymbols(normalizeSpaces(stripInlineMarkdown(rawText)));
   // Option screenshots are cropped copies of the text; only show one when there is no text.
   return { key, text, imagePath: text ? null : imagePath };
 };

@@ -348,7 +348,7 @@ export default function MockExamPrepPage() {
                     years: allYears,
                   })
                 }
-                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+                className="card-brut p-3.5 text-left transition hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">
@@ -375,7 +375,7 @@ export default function MockExamPrepPage() {
                     years: allYears,
                   })
                 }
-                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+                className="card-brut p-3.5 text-left transition hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase">
@@ -402,7 +402,7 @@ export default function MockExamPrepPage() {
                     years: allYears,
                   })
                 }
-                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+                className="card-brut p-3.5 text-left transition hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">
@@ -432,7 +432,7 @@ export default function MockExamPrepPage() {
                     years: allYears,
                   })
                 }
-                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+                className="card-brut p-3.5 text-left transition hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 uppercase">
@@ -457,7 +457,7 @@ export default function MockExamPrepPage() {
                       navigate("/mockexam");
                     }
                   }}
-                  className="card-brut p-3.5 text-left border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-amber-100/70 dark:hover:bg-amber-900/40 cursor-pointer group"
+                  className="card-brut p-3.5 text-left border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 transition hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-amber-100/70 dark:hover:bg-amber-900/40 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 uppercase">
@@ -533,7 +533,7 @@ export default function MockExamPrepPage() {
                   <button
                     type="button"
                     onClick={() => setExamType("AM EXAM")}
-                    className={`py-2.5 px-4 text-sm font-bold border-2 transition-all cursor-pointer ${
+                    className={`py-2.5 px-4 text-sm font-bold border-2 transition cursor-pointer ${
                       examType === "AM EXAM"
                         ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
                         : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
@@ -544,7 +544,7 @@ export default function MockExamPrepPage() {
                   <button
                     type="button"
                     onClick={() => setExamType("PM EXAM")}
-                    className={`py-2.5 px-4 text-sm font-bold border-2 transition-all cursor-pointer ${
+                    className={`py-2.5 px-4 text-sm font-bold border-2 transition cursor-pointer ${
                       examType === "PM EXAM"
                         ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
                         : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
@@ -565,7 +565,7 @@ export default function MockExamPrepPage() {
                     <button
                       type="button"
                       onClick={() => setIsTimed(true)}
-                      className={`py-2 px-3 text-xs md:text-sm font-bold border-2 transition-all cursor-pointer ${
+                      className={`py-2 px-3 text-xs md:text-sm font-bold border-2 transition cursor-pointer ${
                         isTimed
                           ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
                           : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
@@ -576,7 +576,7 @@ export default function MockExamPrepPage() {
                     <button
                       type="button"
                       onClick={() => setIsTimed(false)}
-                      className={`py-2 px-3 text-xs md:text-sm font-bold border-2 transition-all cursor-pointer ${
+                      className={`py-2 px-3 text-xs md:text-sm font-bold border-2 transition cursor-pointer ${
                         !isTimed
                           ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
                           : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
@@ -614,7 +614,7 @@ export default function MockExamPrepPage() {
                           type="button"
                           disabled={!isTimed}
                           onClick={() => setDurationInput(String(chip))}
-                          className={`px-2.5 py-1 text-xs font-mono font-semibold border transition-all cursor-pointer disabled:opacity-40 ${
+                          className={`px-2.5 py-1 text-xs font-mono font-semibold border transition cursor-pointer disabled:opacity-40 ${
                             durationInput === String(chip)
                               ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
                               : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-200"
@@ -653,7 +653,7 @@ export default function MockExamPrepPage() {
                         key={chip}
                         type="button"
                         onClick={() => setQuestionCountInput(String(chip))}
-                        className={`px-2.5 py-1 text-xs font-mono font-semibold border transition-all cursor-pointer ${
+                        className={`px-2.5 py-1 text-xs font-mono font-semibold border transition cursor-pointer ${
                           questionCountInput === String(chip)
                             ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
                             : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-200"
@@ -727,7 +727,7 @@ export default function MockExamPrepPage() {
                   <button
                     type="button"
                     onClick={handleSelectAllYears}
-                    className={`text-xs font-mono font-bold px-2.5 py-1 border transition-all cursor-pointer ${
+                    className={`text-xs font-mono font-bold px-2.5 py-1 border transition cursor-pointer ${
                       isAllYearsSelected
                         ? "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-950 dark:border-zinc-100"
                         : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950"
@@ -738,7 +738,7 @@ export default function MockExamPrepPage() {
                   <button
                     type="button"
                     onClick={handleClearYears}
-                    className="text-xs font-mono font-bold px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 transition-all cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-red-600"
+                    className="text-xs font-mono font-bold px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 transition cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-red-600"
                   >
                     Clear
                   </button>
@@ -754,7 +754,7 @@ export default function MockExamPrepPage() {
                       key={year}
                       type="button"
                       onClick={() => toggleYear(year)}
-                      className={`px-3.5 py-1.5 text-xs font-mono font-bold border-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                      className={`px-3.5 py-1.5 text-xs font-mono font-bold border-2 transition cursor-pointer flex items-center gap-1.5 ${
                         isSelected
                           ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
                           : "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
@@ -782,7 +782,7 @@ export default function MockExamPrepPage() {
                   <button
                     type="button"
                     onClick={handleSelectAllTopics}
-                    className={`text-xs font-mono font-bold px-2.5 py-1 border transition-all cursor-pointer ${
+                    className={`text-xs font-mono font-bold px-2.5 py-1 border transition cursor-pointer ${
                       isAllTopicsSelected
                         ? "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-950 dark:border-zinc-100"
                         : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950"
@@ -793,7 +793,7 @@ export default function MockExamPrepPage() {
                   <button
                     type="button"
                     onClick={handleClearTopics}
-                    className="text-xs font-mono font-bold px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 transition-all cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-red-600"
+                    className="text-xs font-mono font-bold px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 transition cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-red-600"
                   >
                     Clear Topics
                   </button>
@@ -825,7 +825,7 @@ export default function MockExamPrepPage() {
                         <button
                           type="button"
                           onClick={() => toggleCategory(categoryName)}
-                          className={`text-xs font-mono font-semibold px-2 py-0.5 border transition-all cursor-pointer ${
+                          className={`text-xs font-mono font-semibold px-2 py-0.5 border transition cursor-pointer ${
                             isAllCategorySelected
                               ? "bg-zinc-200 dark:bg-zinc-700 border-zinc-400 dark:border-zinc-600 text-zinc-800 dark:text-zinc-200"
                               : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 text-zinc-600 dark:text-zinc-400"
@@ -843,7 +843,7 @@ export default function MockExamPrepPage() {
                               key={topic}
                               type="button"
                               onClick={() => toggleTopic(topic)}
-                              className={`px-3 py-1.5 text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                              className={`px-3 py-1.5 text-xs font-medium border transition cursor-pointer flex items-center gap-1.5 ${
                                 isSelected
                                   ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-200 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
                                   : "border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"

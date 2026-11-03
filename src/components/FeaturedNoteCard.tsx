@@ -26,7 +26,7 @@ export default function FeaturedNoteCard({ note }: { note: FeaturedNote }) {
   const isGoogleDoc = note.embedUrl.includes('docs.google.com')
 
   return (
-    <article className="card-brut flex flex-col justify-between overflow-hidden transition-all duration-150 hover:-translate-y-1 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5]">
+    <article className="card-brut flex flex-col justify-between overflow-hidden transition duration-150 hover:-translate-y-1 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5]">
       {/* Visual Header / Preview */}
       <div className="relative h-48 sm:h-52 w-full border-b-2 border-zinc-950 dark:border-zinc-200 bg-zinc-100 dark:bg-zinc-950 overflow-hidden">
         {/* Domain & Type Badge Bar */}

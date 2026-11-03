@@ -352,7 +352,7 @@ function BackToTopButton() {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex flex-col items-center gap-2 transition-all duration-200 ${
+      className={`fixed bottom-6 right-6 z-50 flex flex-col items-center gap-2 transition duration-200 ${
         showBackToTop
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-2 pointer-events-none"
@@ -634,7 +634,7 @@ export default function MockExamResultsPage() {
                     strokeDashoffset={strokeOffset}
                     strokeLinecap="round"
                     transform="rotate(-90 80 80)"
-                    className="transition-all duration-1000 ease-out"
+                    className="transition duration-1000 ease-out"
                   />
                 </svg>
 
@@ -820,7 +820,7 @@ export default function MockExamResultsPage() {
                     <div className="w-full h-3 bg-zinc-200 dark:bg-zinc-800 border border-zinc-950/25 dark:border-zinc-200/25">
                       <div
                         style={{ width: `${catPct}%` }}
-                        className={`h-full transition-all duration-500 ${
+                        className={`h-full transition-[width] duration-500 ${
                           catPct >= 70
                             ? "bg-emerald-600 dark:bg-emerald-500"
                             : catPct >= 50

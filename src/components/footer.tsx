@@ -33,7 +33,7 @@ export default function Footer() {
               href="https://github.com/noni-was-taken"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-2 py-0.5 border border-zinc-950 dark:border-zinc-300 font-mono text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-950 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-950 shadow-[1px_1px_0px_0px_#09090b] dark:shadow-[1px_1px_0px_0px_#f4f4f5] transition-all"
+              className="inline-flex items-center px-2 py-0.5 border border-zinc-950 dark:border-zinc-300 font-mono text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-950 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-950 shadow-[1px_1px_0px_0px_#09090b] dark:shadow-[1px_1px_0px_0px_#f4f4f5] transition"
             >
               nonua
             </a>
@@ -49,7 +49,7 @@ export default function Footer() {
                 href={contrib.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-2 py-0.5 border border-zinc-950 dark:border-zinc-300 font-mono text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-950 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-950 shadow-[1px_1px_0px_0px_#09090b] dark:shadow-[1px_1px_0px_0px_#f4f4f5] transition-all"
+                className="inline-flex items-center px-2 py-0.5 border border-zinc-950 dark:border-zinc-300 font-mono text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-950 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-950 shadow-[1px_1px_0px_0px_#09090b] dark:shadow-[1px_1px_0px_0px_#f4f4f5] transition"
               >
                 {contrib.name}
               </a>

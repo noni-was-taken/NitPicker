@@ -1,28 +1,29 @@
 import Layout from '../components/Layout'
 import FeaturedNoteCard, { type FeaturedNote } from '../components/FeaturedNoteCard'
+import { BookOpenText, EnvelopeSimple, ChatCircleDots } from '@phosphor-icons/react'
 
 const featuredNotes: FeaturedNote[] = [
   {
     title: "Yza's Strategy and Management Gizmo Deck",
-    description: 'Interactive Gizmo deck for quick review and recall practice.',
+    description: 'Interactive Gizmo flashcard deck for quick recall and high-frequency business & management terminology.',
     url: 'https://app.gizmo.ai/decks/66373942',
     embedUrl: 'https://app.gizmo.ai/decks/66373942',
   },
   {
     title: "Yza's IT Fundamentals Gizmo Deck",
-    description: 'Note that this is still ongoing and is not completed',
+    description: 'Ongoing interactive deck covering computer systems, hardware architectures, and fundamental IT principles.',
     url: 'https://app.gizmo.ai/decks/66373943',
     embedUrl: 'https://app.gizmo.ai/decks/66373943',
   },
   {
     title: "Ethan's Study Notes",
-    description: 'Shared document with structured study notes and references.',
+    description: 'Comprehensive shared document featuring structured concept breakdowns, formulas, and domain summaries.',
     url: 'https://docs.google.com/document/d/1gsgeDGyGu1NOGHgT9dXdReiJnPbj08vmvGQqcP10G5A/edit?usp=sharing',
     embedUrl: 'https://docs.google.com/document/d/1gsgeDGyGu1NOGHgT9dXdReiJnPbj08vmvGQqcP10G5A/preview',
   },
   {
     title: 'Yza, Ethan, Jhanell Notes',
-    description: 'Curated questions, concepts, and solutions',
+    description: 'Collaborative repository of curated sample questions, domain formulas, and detailed step-by-step solutions.',
     url: 'https://docs.google.com/document/d/1pgmVXpfEJxhkbpgRbgKjjsmPJNNFkWdPDsrHjpW_6Pc/edit?usp=sharing',
     embedUrl: 'https://docs.google.com/document/d/1pgmVXpfEJxhkbpgRbgKjjsmPJNNFkWdPDsrHjpW_6Pc/preview',
   },
@@ -40,36 +41,83 @@ const gmailComposeLink = (email: string) =>
 
 export default function NotesPage() {
   return (
-    <Layout className="py-10 md:py-0 gap-6 md:gap-10 select-none">
-      <main className="flex-1 w-full flex items-start justify-center px-6 md:px-20">
-        <div className="w-full max-w-7xl py-6 md:py-10">
-          <div className="mb-8 text-center md:mb-10">
-            <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white md:text-4xl">Featured Notes</h1>
-            <p className="mt-2 text-sm text-black dark:text-zinc-300 md:text-base">
-              DM <a href="https://www.facebook.com/demonacolyte9123" className='font-bold underline '>Jose Miguel Carumba</a> on Facebook if you would like your notes to be featured
-            </p>
-            <p className="mt-2 text-sm text-black dark:text-zinc-300 md:text-base">
-              or email us at either{' '}
-              {contactEmails.map((email, index) => (
-                <span key={email}>
-                  <a
-                    href={gmailComposeLink(email)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold underline"
-                  >
-                    {email}
-                  </a>
-                  {index < contactEmails.length - 1 ? ' - ' : ''}
-                </span>
-              ))}
-            </p>
+    <Layout>
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        {/* Editorial Page Header */}
+        <div className="mb-10 pb-6 border-b-2 border-zinc-950 dark:border-zinc-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="badge-brut bg-blue-600 text-white dark:bg-blue-500 dark:text-zinc-950">
+              <BookOpenText className="h-3 w-3" />
+              COMMUNITY VAULT
+            </span>
+            <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
+              PHILNITS FE NOTES & DECKS
+            </span>
           </div>
 
-          <section className="grid grid-cols-1 gap-4 pb-7 sm:gap-5 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
-            {featuredNotes.map(note => <FeaturedNoteCard key={note.url} note={note} />)}
-          </section>
+          <h1 className="text-3xl sm:text-5xl font-heading font-black tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">
+            Featured Study Notes
+          </h1>
+
+          <p className="mt-3 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 max-w-3xl leading-relaxed">
+            Curated reference sheets, active-recall flashcard decks, and collaborative study guides contributed by PhilNITS examinees and student mentors.
+          </p>
         </div>
+
+        {/* Contribution Callout Banner */}
+        <section className="mb-10 p-5 sm:p-6 card-brut bg-zinc-50 dark:bg-zinc-900/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div className="flex items-start gap-3">
+            <div className="p-2 border border-zinc-950 dark:border-zinc-200 bg-amber-200 dark:bg-amber-400 text-zinc-950 shrink-0">
+              <ChatCircleDots className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wide">
+                Want to feature your notes?
+              </p>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                Direct message{' '}
+                <a
+                  href="https://www.facebook.com/demonacolyte9123"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline text-zinc-950 dark:text-zinc-100 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  Jose Miguel Carumba
+                </a>{' '}
+                on Facebook or send study decks to the student maintainers.
+              </p>
+            </div>
+          </div>
+
+          {/* Email Chips */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 dark:text-zinc-400 mr-1">
+              <EnvelopeSimple className="h-4 w-4" />
+              <span>Contact:</span>
+            </div>
+            {contactEmails.map((email) => (
+              <a
+                key={email}
+                href={gmailComposeLink(email)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-2 py-0.5 border border-zinc-950 dark:border-zinc-300 font-mono text-xs font-semibold bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-950 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-950 shadow-[1px_1px_0px_0px_#09090b] dark:shadow-[1px_1px_0px_0px_#f4f4f5] transition-all"
+              >
+                {email}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Featured Notes Grid */}
+        <section
+          aria-label="Study notes list"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 pb-10"
+        >
+          {featuredNotes.map((note) => (
+            <FeaturedNoteCard key={note.url} note={note} />
+          ))}
+        </section>
       </main>
     </Layout>
   )

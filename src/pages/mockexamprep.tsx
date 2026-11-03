@@ -1,41 +1,73 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Sliders,
+  Clock,
+  HelpCircle,
+  AlertTriangle,
+  Layers,
+  Calendar,
+  Play,
+  Trash2,
+  ArrowRight,
+  RotateCcw,
+  CheckCircle2,
+  Bookmark,
+} from "lucide-react";
 import Layout from "../components/Layout";
 import LoadingSpinner from "../components/LoadingSpinner";
-import SkeletonLoader from "../components/SkeletonLoader";
 import {
   allTopics,
   categoryTopics,
   clearMockExamResult,
   clearMockExamSession,
+  loadBookmarkedQuestionIds,
   loadMockExamSession,
   saveMockExamSession,
   type CategoryName,
   type MockExamSettings,
 } from "../exam/mockExamModel";
-import { buildMockExamSession, getAllAvailableYears, getEligibleQuestionCount } from "../exam/mockExamQuestionBank";
+import {
+  buildMockExamSession,
+  buildStarredQuestionsSession,
+  getAllAvailableYears,
+  getEligibleQuestionCount,
+} from "../exam/mockExamQuestionBank";
 import { UI_LIMITS } from "../config/constants";
 import { trackEvent } from "../lib/analytics";
 
-// This is a temporary page to show the exam maker page
+const DURATION_CHIPS = [30, 60, 90, 150];
+const QUESTION_CHIPS = [10, 20, 40, 80];
+
 export default function MockExamPrepPage() {
   const navigate = useNavigate();
+  const allYears = useMemo(() => getAllAvailableYears(), []);
+  const bookmarkedIds = useMemo(() => loadBookmarkedQuestionIds(), []);
+  const bookmarkedCount = bookmarkedIds.length;
+
   const [examType, setExamType] = useState<"AM EXAM" | "PM EXAM">("AM EXAM");
   const [isTimed, setIsTimed] = useState(true);
-  const [durationInput, setDurationInput] = useState<string>(String(UI_LIMITS.defaultDurationMinutes));
-  const [questionCountInput, setQuestionCountInput] = useState<string>(String(UI_LIMITS.defaultQuestionCount));
+  const [durationInput, setDurationInput] = useState<string>(
+    String(UI_LIMITS.defaultDurationMinutes),
+  );
+  const [questionCountInput, setQuestionCountInput] = useState<string>(
+    String(UI_LIMITS.defaultQuestionCount),
+  );
   const [instantAnswers, setInstantAnswers] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>(allTopics);
-  const [selectedYears, setSelectedYears] = useState<string[]>(() => getAllAvailableYears());
+  const [selectedYears, setSelectedYears] = useState<string[]>(allYears);
+
   const [startError, setStartError] = useState<string | null>(null);
-  const [inputValidationError, setInputValidationError] = useState<string | null>(null);
+  const [inputValidationError, setInputValidationError] = useState<string | null>(
+    null,
+  );
   const [hasActiveSession, setHasActiveSession] = useState(() => {
     const session = loadMockExamSession();
-    return Boolean(session && session.questions.length > 0);
+    return Boolean(session && session.questions && session.questions.length > 0);
   });
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [isStartingExam, setIsStartingExam] = useState(false);
-  const formControlClassName = "h-6 w-6 md:h-4 md:w-4 accent-black dark:accent-white shrink-0 cursor-pointer";
+
   const closeStartErrorModal = () => setStartError(null);
   const closeInputValidationModal = () => setInputValidationError(null);
   const closeResumeModal = () => setShowResumeModal(false);
@@ -52,81 +84,80 @@ export default function MockExamPrepPage() {
     });
   }, [examType, selectedTopics, selectedYears, isTimed, instantAnswers]);
 
-  useEffect(() => {
-    const currentReq = Number(questionCountInput);
-    if (currentReq > availableCount && availableCount > 0) {
-      setQuestionCountInput(String(availableCount));
-    }
-  }, [availableCount, questionCountInput]);
-
   const parseWholeNumber = (rawValue: string): number | null => {
     const trimmed = rawValue.trim();
     if (!trimmed || !/^\d+$/.test(trimmed)) {
       return null;
     }
-
     const parsed = Number(trimmed);
     return Number.isFinite(parsed) ? parsed : null;
   };
 
-  const getQuestionCountValidationError = (rawValue: string): string | null => {
+  const getQuestionCountValidationError = (
+    rawValue: string,
+    currentPool: number,
+  ): string | null => {
     const parsed = parseWholeNumber(rawValue);
     if (parsed === null || parsed < 1 || parsed > UI_LIMITS.maxQuestionCount) {
       return `Input not allowed. Questions must be between 1 and ${UI_LIMITS.maxQuestionCount}.`;
     }
-    if (parsed > availableCount) {
-      return `Input not allowed. Only ${availableCount} questions match the current filters.`;
+    if (parsed > currentPool) {
+      return `Input not allowed. Only ${currentPool} questions match the current filters.`;
     }
-
     return null;
   };
 
   const handleStartExam = (forceStartNew = false) => {
-    setIsStartingExam(true);
-
-    if (hasActiveSession && !forceStartNew) {
-      setShowResumeModal(true);
-      setIsStartingExam(false);
+    // 1. Validate all inputs FIRST before touching any session state
+    if (selectedTopics.length === 0) {
+      setInputValidationError("You have to choose at least 1 topic.");
       return;
     }
+
+    if (selectedYears.length === 0) {
+      setInputValidationError("You have to choose at least 1 year.");
+      return;
+    }
+
+    const parsedDurationMinutes = parseWholeNumber(durationInput);
+    if (isTimed && (parsedDurationMinutes === null || parsedDurationMinutes < 1)) {
+      setInputValidationError("Input not allowed. Duration must be at least 1 minute.");
+      return;
+    }
+
+    const countError = getQuestionCountValidationError(questionCountInput, availableCount);
+    if (countError) {
+      setInputValidationError(countError);
+      return;
+    }
+
+    if (availableCount <= 0) {
+      setInputValidationError(
+        "No questions match your current filters. Select more topics or years.",
+      );
+      return;
+    }
+
+    // 2. If user already has an active session and hasn't explicitly chosen to overwrite, prompt them
+    if (hasActiveSession && !forceStartNew) {
+      setShowResumeModal(true);
+      return;
+    }
+
+    // 3. Inputs are completely valid. Now proceed to create the session.
+    setIsStartingExam(true);
 
     if (forceStartNew) {
       clearMockExamSession();
       setHasActiveSession(false);
       setShowResumeModal(false);
     }
-    
-    const questionCountValidationError = getQuestionCountValidationError(questionCountInput);
-    if (questionCountValidationError) {
-      setInputValidationError(questionCountValidationError);
-      setIsStartingExam(false);
-      return;
-    }
-
-    if (selectedTopics.length === 0) {
-      setInputValidationError("You have to choose at least 1 topic.");
-      setIsStartingExam(false);
-      return;
-    }
-
-    if (selectedYears.length === 0) {
-      setInputValidationError("You have to choose at least 1 year.");
-      setIsStartingExam(false);
-      return;
-    }
 
     const safeQuestionCount = Number(questionCountInput);
-    const parsedDurationMinutes = parseWholeNumber(durationInput);
-    if (isTimed && (parsedDurationMinutes === null || parsedDurationMinutes < 1)) {
-      setInputValidationError("Input not allowed. Duration must be at least 1 minute.");
-      setIsStartingExam(false);
-      return;
-    }
-
     const safeDurationMin = isTimed
       ? (parsedDurationMinutes ?? UI_LIMITS.defaultDurationMinutes)
       : UI_LIMITS.defaultDurationMinutes;
-    
+
     const examSettings: MockExamSettings = {
       examType,
       isTimed,
@@ -140,14 +171,14 @@ export default function MockExamPrepPage() {
     const session = buildMockExamSession(examSettings);
 
     if (session.questions.length === 0) {
-      setStartError("No questions match your current filters. Try selecting more topics.");
+      setStartError("No questions match your current filters. Try selecting more topics or years.");
       setIsStartingExam(false);
       return;
     }
 
     if (session.questions.length < safeQuestionCount) {
       setStartError(
-        `Only ${session.questions.length} matching questions are available. Reduce the question count or broaden topic selection.`,
+        `Only ${session.questions.length} matching questions are available. Reduce the question count or broaden selection.`,
       );
       setIsStartingExam(false);
       return;
@@ -157,11 +188,13 @@ export default function MockExamPrepPage() {
     clearMockExamResult();
     saveMockExamSession(session);
     setHasActiveSession(true);
-    trackEvent('exam_started', {
+
+    trackEvent("exam_started", {
       exam_type: examType,
       question_count: safeQuestionCount,
       timed: isTimed,
-    })
+    });
+
     navigate("/mockexam");
   };
 
@@ -170,309 +203,790 @@ export default function MockExamPrepPage() {
     navigate("/mockexam");
   };
 
-  const applyActualExamDefaults = () => {
-    setIsTimed(true);
-    setDurationInput(String(UI_LIMITS.defaultDurationMinutes));
-    setQuestionCountInput(String(UI_LIMITS.defaultQuestionCount));
-    setInstantAnswers(false);
-    setSelectedTopics(allTopics);
-    setSelectedYears(getAllAvailableYears());
+  const handleDiscardSession = () => {
+    clearMockExamSession();
+    setHasActiveSession(false);
+    setShowResumeModal(false);
+  };
+
+  // Pure state update handlers without side effects in updaters
+  const toggleYear = (year: string) => {
+    const isSelected = selectedYears.includes(year);
+    const nextYears = isSelected
+      ? selectedYears.filter((item) => item !== year)
+      : [...selectedYears, year];
+
+    setSelectedYears(nextYears);
+    if (nextYears.length > 0 && inputValidationError?.includes("year")) {
+      setInputValidationError(null);
+    }
+  };
+
+  const handleSelectAllYears = () => {
+    setSelectedYears(allYears);
+    if (inputValidationError?.includes("year")) {
+      setInputValidationError(null);
+    }
+  };
+
+  const handleClearYears = () => {
+    setSelectedYears([]);
   };
 
   const toggleTopic = (topic: string) => {
-    setSelectedTopics((currentTopics) => {
-      const isSelected = currentTopics.includes(topic);
-      const nextTopics = isSelected
-        ? currentTopics.filter((currentTopic) => currentTopic !== topic)
-        : [...currentTopics, topic];
+    const isSelected = selectedTopics.includes(topic);
+    const nextTopics = isSelected
+      ? selectedTopics.filter((item) => item !== topic)
+      : [...selectedTopics, topic];
 
-      if (nextTopics.length === 0) {
-        setInputValidationError("You have to choose at least 1 topic.");
-      }
-
-      return nextTopics;
-    });
-  };
-
-  const toggleYear = (year: string) => {
-    setSelectedYears((currentYears) => {
-      const isSelected = currentYears.includes(year);
-      const nextYears = isSelected
-        ? currentYears.filter((currentYear) => currentYear !== year)
-        : [...currentYears, year];
-
-      if (nextYears.length === 0) {
-        setInputValidationError("You have to choose at least 1 year.");
-      }
-
-      return nextYears;
-    });
+    setSelectedTopics(nextTopics);
+    if (nextTopics.length > 0 && inputValidationError?.includes("topic")) {
+      setInputValidationError(null);
+    }
   };
 
   const toggleCategory = (categoryName: CategoryName) => {
     const topicsInCategory: readonly string[] = categoryTopics[categoryName];
-
-    setSelectedTopics((currentTopics) => {
-      const hasAllTopics = topicsInCategory.every((topic) => currentTopics.includes(topic));
-      const nextTopics = hasAllTopics
-        ? currentTopics.filter((topic) => !topicsInCategory.includes(topic))
-        : [...new Set([...currentTopics, ...topicsInCategory])];
-
-      if (nextTopics.length === 0) {
-        setInputValidationError("You have to choose at least 1 topic.");
-      }
-
-      return nextTopics;
-    });
-  };
-
-  const renderYearsFieldset = () => {
-    const years = getAllAvailableYears();
-    const isAllYearsSelected = years.every((year) => selectedYears.includes(year));
-
-    return (
-      <fieldset className="border-2 p-3 lg:p-4 dark:border-white/30">
-        <div className="mb-3">
-          <label className="inline-flex items-center gap-3 py-1 text-base lg:text-lg font-medium cursor-pointer">
-            <input
-              type="checkbox"
-              className={formControlClassName}
-              checked={isAllYearsSelected}
-              onChange={() => {
-                const nextYears = isAllYearsSelected ? [] : years;
-                setSelectedYears(nextYears);
-                if (nextYears.length === 0) {
-                  setInputValidationError("You have to choose at least 1 year.");
-                }
-              }}
-            />
-            <span>All Years</span>
-          </label>
-        </div>
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          {years.map((year) => (
-            <label key={year} className="flex items-center gap-2 py-1 text-sm lg:text-base cursor-pointer">
-              <input
-                type="checkbox"
-                className={formControlClassName}
-                checked={selectedYears.includes(year)}
-                onChange={() => toggleYear(year)}
-              />
-              <span>{year}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+    const hasAllTopics = topicsInCategory.every((topic) =>
+      selectedTopics.includes(topic),
     );
+
+    const nextTopics = hasAllTopics
+      ? selectedTopics.filter((topic) => !topicsInCategory.includes(topic))
+      : [...new Set([...selectedTopics, ...topicsInCategory])];
+
+    setSelectedTopics(nextTopics);
+    if (nextTopics.length > 0 && inputValidationError?.includes("topic")) {
+      setInputValidationError(null);
+    }
   };
 
-  const renderCategoryFieldset = (categoryName: CategoryName) => {
-    const topics = categoryTopics[categoryName];
-    const isCategoryFullySelected = topics.every((topic) => selectedTopics.includes(topic));
-
-    return (
-      <fieldset key={categoryName} className="border-2 p-3 lg:p-4 dark:border-white/30">
-        <div className="mb-3">
-          <label className="inline-flex items-center gap-3 py-1 text-base lg:text-lg font-medium cursor-pointer">
-            <input
-              type="checkbox"
-              className={formControlClassName}
-              checked={isCategoryFullySelected}
-              onChange={() => toggleCategory(categoryName)}
-            />
-            <span>{categoryName}</span>
-          </label>
-        </div>
-        <div className="grid grid-cols-1 gap-2">
-          {topics.map((topic) => (
-            <label key={topic} className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
-              <input
-                type="checkbox"
-                className={formControlClassName}
-                checked={selectedTopics.includes(topic)}
-                onChange={() => toggleTopic(topic)}
-              />
-              <span>{topic}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-    );
+  const handleSelectAllTopics = () => {
+    setSelectedTopics(allTopics);
+    if (inputValidationError?.includes("topic")) {
+      setInputValidationError(null);
+    }
   };
+
+  const handleClearTopics = () => {
+    setSelectedTopics([]);
+  };
+
+  // Preset Handlers
+  const applyPreset = (preset: {
+    examType?: "AM EXAM" | "PM EXAM";
+    isTimed: boolean;
+    durationMinutes: number;
+    questionCount: number;
+    instantAnswers: boolean;
+    topics: string[];
+    years: string[];
+  }) => {
+    if (preset.examType) setExamType(preset.examType);
+    setIsTimed(preset.isTimed);
+    setDurationInput(String(preset.durationMinutes));
+    setQuestionCountInput(String(preset.questionCount));
+    setInstantAnswers(preset.instantAnswers);
+    setSelectedTopics(preset.topics);
+    setSelectedYears(preset.years);
+    setInputValidationError(null);
+    setStartError(null);
+  };
+
+  const isAllYearsSelected = allYears.length > 0 && selectedYears.length === allYears.length;
+  const isAllTopicsSelected = allTopics.length > 0 && selectedTopics.length === allTopics.length;
+
+  const currentCountNum = parseWholeNumber(questionCountInput) ?? 0;
+  const isCountExceedingPool = currentCountNum > availableCount && availableCount > 0;
 
   return (
-    <>
-      <Layout className="gap-10 select-none py-10 md:py-0">
-
-        <div className="min-h-[78vh] w-full flex flex-col lg:flex-row items-center  justify-between px-6 lg:px-20 gap-10">
-          
-          <div className="flex flex-col gap-10 w-full lg:w-auto lg:items-start items-center">
-            <h1 className="-tracking-widest text-6xl lg:text-8xl">You ready?</h1>
-            <button
-              type="button"
-              onClick={() => handleStartExam()}
-              disabled={isStartingExam}
-              className="flex py-6 lg:py-8 items-center justify-center border-2 duration-300 group hover:bg-black dark:border-white dark:hover:bg-white cursor-pointer"
-            >
-              <h1 className="text-2xl w-50 group-hover:text-white font-bold group-hover:font-light duration-300 dark:text-white dark:group-hover:text-black">
-                {isStartingExam ? "BUILDING..." : "LETS GO"}
+    <Layout className="dark:text-white select-none py-6 md:py-8">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Page Heading & Brutalist Banner */}
+        <div className="border-b-2 border-zinc-950 dark:border-zinc-100 pb-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 mb-2 bg-blue-100 dark:bg-blue-950/60 border border-blue-600 dark:border-blue-400 text-blue-900 dark:text-blue-200 text-xs font-mono font-bold uppercase tracking-wider">
+                <Sliders className="w-3.5 h-3.5" /> PhilNITS FE Exam Studio
+              </div>
+              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight font-heading">
+                Mock Exam Prep
               </h1>
-            </button>
-            {isStartingExam ? <LoadingSpinner label="Building exam session" /> : null}
+              <p className="mt-2 text-base md:text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl">
+                Configure your tailored FE exam session, practice high-yield topics, or launch a full timed simulation.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="badge-brut bg-zinc-100 dark:bg-zinc-800">
+                {allYears.length} Exam Years
+              </span>
+              <span className="badge-brut bg-zinc-100 dark:bg-zinc-800">
+                {allTopics.length} Topics
+              </span>
+            </div>
           </div>
 
-          <div className="border border-black dark:border-white h-[70vh] w-full lg:w-[52vw] flex flex-col overflow-hidden">
-            <div className="flex md:gap-10 border-b-2 dark:border-white/30 py-7 md:py-0">
-              
-              <div className="p-4 lg:p-6 flex flex-col gap-4 flex-1">  
-                <h1 className="font-light text-3xl">Exam Type</h1>
-                <div className="w-full flex gap-3">
+          {/* Quick Presets Bar */}
+          <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5" /> One-Click Quick Presets
+              </p>
+            </div>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${bookmarkedCount > 0 ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-3`}>
+              <button
+                type="button"
+                onClick={() =>
+                  applyPreset({
+                    examType: "AM EXAM",
+                    isTimed: true,
+                    durationMinutes: 150,
+                    questionCount: 80,
+                    instantAnswers: false,
+                    topics: allTopics,
+                    years: allYears,
+                  })
+                }
+                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">
+                    Official Spec
+                  </span>
+                  <Clock className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                </div>
+                <div className="font-bold text-sm md:text-base mt-1">Full FE Simulation</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                  80Q · 150m · Final Exam Mode
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  applyPreset({
+                    examType: "AM EXAM",
+                    isTimed: true,
+                    durationMinutes: 30,
+                    questionCount: 20,
+                    instantAnswers: true,
+                    topics: allTopics,
+                    years: allYears,
+                  })
+                }
+                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase">
+                    Rapid Practice
+                  </span>
+                  <RotateCcw className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                </div>
+                <div className="font-bold text-sm md:text-base mt-1">Quick Sprint</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                  20Q · 30m · Instant Reveal
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  applyPreset({
+                    examType: "AM EXAM",
+                    isTimed: true,
+                    durationMinutes: 75,
+                    questionCount: 40,
+                    instantAnswers: false,
+                    topics: [...categoryTopics.Technology],
+                    years: allYears,
+                  })
+                }
+                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">
+                    Core Engineering
+                  </span>
+                  <Layers className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                </div>
+                <div className="font-bold text-sm md:text-base mt-1">Technology Focus</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                  40Q · 75m · Tech Topics Only
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  applyPreset({
+                    examType: "AM EXAM",
+                    isTimed: true,
+                    durationMinutes: 45,
+                    questionCount: 25,
+                    instantAnswers: false,
+                    topics: [
+                      ...categoryTopics.Management,
+                      ...categoryTopics.Strategy,
+                    ],
+                    years: allYears,
+                  })
+                }
+                className="card-brut p-3.5 text-left transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-zinc-50 dark:hover:bg-zinc-800/80 cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 uppercase">
+                    Business & Ops
+                  </span>
+                  <Calendar className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                </div>
+                <div className="font-bold text-sm md:text-base mt-1">Mgmt & Strategy</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                  25Q · 45m · Non-Technical Core
+                </div>
+              </button>
+
+              {bookmarkedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const session = buildStarredQuestionsSession(bookmarkedIds);
+                    if (session && session.questions.length > 0) {
+                      clearMockExamResult();
+                      saveMockExamSession(session);
+                      navigate("/mockexam");
+                    }
+                  }}
+                  className="card-brut p-3.5 text-left border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-amber-100/70 dark:hover:bg-amber-900/40 cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 uppercase">
+                      Targeted Drill
+                    </span>
+                    <Bookmark className="w-4 h-4 text-amber-500 fill-current opacity-70 group-hover:opacity-100" />
+                  </div>
+                  <div className="font-bold text-sm md:text-base mt-1">Starred Weak Spots</div>
+                  <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                    {bookmarkedCount}Q · Adaptive Review
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2-Column Responsive Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Main Configuration Workbench (Left Column) */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Active Session Alert Banner (if any) */}
+            {hasActiveSession ? (
+              <div className="border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h2 className="font-bold text-base md:text-lg text-amber-900 dark:text-amber-200">
+                      Active Exam Session In Progress
+                    </h2>
+                    <p className="text-xs md:text-sm text-amber-800/80 dark:text-amber-300/80">
+                      You have an unfinished mock exam stored in this browser. You can resume immediately or discard it.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleResumeExam}
+                    className="btn-solid text-xs md:text-sm px-4 py-2 flex-1 sm:flex-none flex items-center justify-center gap-1.5"
+                  >
+                    <Play className="w-3.5 h-3.5" /> RESUME EXAM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDiscardSession}
+                    className="btn-outline text-xs md:text-sm px-3 py-2 flex items-center justify-center gap-1 hover:text-red-600 dark:hover:text-red-400"
+                    title="Discard Active Session"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> DISCARD
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Exam Mode & Timing Card */}
+            <div className="card-brut p-5 md:p-6 space-y-5">
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <h2 className="text-lg md:text-xl font-bold flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Exam Mode & Duration
+                </h2>
+                <span className="badge-brut bg-zinc-100 dark:bg-zinc-800">AM FE Exam</span>
+              </div>
+
+              {/* Exam Type Selection */}
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                  Exam Type
+                </label>
+                <div className="grid grid-cols-2 gap-3 max-w-md">
                   <button
                     type="button"
                     onClick={() => setExamType("AM EXAM")}
-                    className={`font-medium text-base lg:text-xl px-4 py-2 border-2 flex-1 duration-200 cursor-pointer ${
-                      examType === "AM EXAM" ? "bg-black text-white dark:bg-white dark:text-black" : "bg-white text-black dark:bg-zinc-950 dark:text-white"
+                    className={`py-2.5 px-4 text-sm font-bold border-2 transition-all cursor-pointer ${
+                      examType === "AM EXAM"
+                        ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
+                        : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
                     }`}
                   >
-                    AM EXAM
+                    AM EXAM (80 Questions)
                   </button>
-      
+                  <button
+                    type="button"
+                    onClick={() => setExamType("PM EXAM")}
+                    className={`py-2.5 px-4 text-sm font-bold border-2 transition-all cursor-pointer ${
+                      examType === "PM EXAM"
+                        ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
+                        : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
+                    }`}
+                  >
+                    PM EXAM (Case Studies)
+                  </button>
                 </div>
               </div>
-              
-              <div className="flex-1 flex flex-col items-center justify-center border-l-2 dark:border-white/30 gap-4 px-2">
-                <p className="text-gray-700 dark:text-gray-300 text-center text-sm">
-                  If you want an actual exam simulation settings:
-                </p>
-                <button
-                  type="button"
-                  onClick={applyActualExamDefaults}
-                  className="border-2 py-2 px-4 font-extrabold duration-75 hover:bg-black hover:text-white hover:font-light cursor-pointer dark:border-white dark:hover:bg-white dark:hover:text-black"
-                >
-                  ACTUAL EXAM
-                </button>
+
+              {/* Timer Mode & Duration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div className="space-y-2">
+                  <span className="block text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Timer Mode
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsTimed(true)}
+                      className={`py-2 px-3 text-xs md:text-sm font-bold border-2 transition-all cursor-pointer ${
+                        isTimed
+                          ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
+                          : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+                      }`}
+                    >
+                      Timed Exam
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsTimed(false)}
+                      className={`py-2 px-3 text-xs md:text-sm font-bold border-2 transition-all cursor-pointer ${
+                        !isTimed
+                          ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
+                          : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+                      }`}
+                    >
+                      Untimed (Practice)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      Duration (Minutes)
+                    </span>
+                    {!isTimed && (
+                      <span className="text-[11px] font-mono text-zinc-400">
+                        (Disabled in untimed mode)
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      disabled={!isTimed}
+                      value={durationInput}
+                      onChange={(e) => setDurationInput(e.target.value.replace(/\D/g, ""))}
+                      className="form-input w-28 text-center text-sm font-bold disabled:opacity-40"
+                    />
+                    <div className="flex items-center gap-1">
+                      {DURATION_CHIPS.map((chip) => (
+                        <button
+                          key={chip}
+                          type="button"
+                          disabled={!isTimed}
+                          onClick={() => setDurationInput(String(chip))}
+                          className={`px-2.5 py-1 text-xs font-mono font-semibold border transition-all cursor-pointer disabled:opacity-40 ${
+                            durationInput === String(chip)
+                              ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
+                              : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-200"
+                          }`}
+                        >
+                          {chip}m
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Question Count & Quick Chips */}
+              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Question Count
+                  </span>
+                  <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                    Matching Pool: <strong className="text-zinc-950 dark:text-zinc-100">{availableCount}</strong>
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={questionCountInput}
+                    onChange={(e) => setQuestionCountInput(e.target.value.replace(/\D/g, ""))}
+                    className="form-input w-28 text-center text-sm font-bold"
+                  />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {QUESTION_CHIPS.map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => setQuestionCountInput(String(chip))}
+                        className={`px-2.5 py-1 text-xs font-mono font-semibold border transition-all cursor-pointer ${
+                          questionCountInput === String(chip)
+                            ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950"
+                            : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-200"
+                        }`}
+                      >
+                        {chip}Q
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuestionCountInput(
+                          String(Math.min(availableCount, UI_LIMITS.maxQuestionCount)),
+                        )
+                      }
+                      className="px-3 py-1 text-xs font-mono font-bold border-2 border-blue-600 dark:border-blue-400 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer"
+                      title="Set to maximum matching questions"
+                    >
+                      MAX ({availableCount})
+                    </button>
+                  </div>
+                </div>
+
+                {isCountExceedingPool && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 font-mono mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Requested {currentCountNum}Q exceeds available pool of {availableCount}Q.
+                    <button
+                      type="button"
+                      onClick={() => setQuestionCountInput(String(availableCount))}
+                      className="underline font-bold ml-1 cursor-pointer"
+                    >
+                      Clamp to {availableCount}
+                    </button>
+                  </p>
+                )}
+              </div>
+
+              {/* Instant Answer Reveal Toggle */}
+              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={instantAnswers}
+                    onChange={(e) => setInstantAnswers(e.target.checked)}
+                    className="mt-1 h-5 w-5 rounded-none border-2 border-zinc-950 dark:border-zinc-100 accent-blue-600 cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-bold text-sm md:text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      Instant Answer Reveal Mode
+                    </span>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                      Show official answers and detailed explanations immediately after answering each question. Recommended for active learning and topic sprints.
+                    </p>
+                  </div>
+                </label>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-7">
-              <div className="flex flex-col md:flex-row md:justify-between gap-6 p-4">
-                {/* TIMER */}
-                <section className="flex flex-col gap-3 lg:flex-1">
-                  <h2 className="text-2xl font-light">Timer</h2>
-                  <div className="flex gap-5 items-center">
-                    <label className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
-                      <input
-                        type="radio"
-                        name="timed-mode"
-                        className={formControlClassName}
-                        checked={isTimed}
-                        onChange={() => setIsTimed(true)}
-                      />
-                      Timed
-                    </label>
-                    <label className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
-                      <input
-                        type="radio"
-                        name="timed-mode"
-                        className={formControlClassName}
-                        checked={!isTimed}
-                        onChange={() => setIsTimed(false)}
-                      />
-                      Not timed
-                    </label>
-                  </div>
-                  
-                {/* NUMBER OF QUESTIONS */}
-                  <label className="flex flex-col gap-2 w-1/2">
-                    <span className="text-sm lg:text-base">Duration (minutes)</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={durationInput}
-                      onChange = {(e) => {
-                        const value = e.target.value;
-
-                        const numericOnly = value.replace(/\D/g, "");
-                        setDurationInput(numericOnly);
-                      }}
-                      className="form-input"
-                    />
-                  </label>
-                  <p className="text-xs opacity-70">Default: {UI_LIMITS.defaultDurationMinutes} minutes. Minimum: 1 minute.</p>
-                </section>
-                
-                {/* QUESTIONS */}
-                <section className="flex flex-col gap-3 lg:flex-1">
-                  <h2 className="text-2xl font-light">Questions</h2>
-                  <label className="flex flex-col gap-2 max-w-xs">
-                    <span className="text-sm lg:text-base">How many questions?</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={questionCountInput}
-                      onChange={(e) => {
-                        const value = e.target.value;
-
-                        const numericOnly = value.replace(/\D/g, "");
-                        setQuestionCountInput(numericOnly);
-                      }}
-                      onBlur={() => {
-                        const validationError = getQuestionCountValidationError(questionCountInput);
-                        if (validationError) {
-                          setInputValidationError(validationError);
-                        }
-                      }}
-                      className="form-input"
-                    />
-                  </label>
-                  <p className="text-xs opacity-70">
-                    Default: {Math.min(UI_LIMITS.defaultQuestionCount, availableCount)} questions. Maximum: {Math.min(UI_LIMITS.maxQuestionCount, availableCount)} available based on current filters.
-                  </p>
-                </section>
-              </div>
-              
-              <section className="flex flex-col gap-3 pb-2">
-                <h2 className="text-2xl font-light">Answer Reveal</h2>
-                <label className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className={formControlClassName}
-                    checked={instantAnswers}
-                    onChange={(event) => setInstantAnswers(event.target.checked)}
-                  />
-                  Show the correct answer instantly after each question
-                </label>
-              </section>
-
-              <section className="flex flex-col gap-4">
-                <h2 className="text-2xl font-light">Exam Years</h2>
-                {isStartingExam ? <SkeletonLoader lines={2} /> : renderYearsFieldset()}
-              </section>
-
-              <section className="flex flex-col gap-4">
-                <h2 className="text-2xl font-light">Categories & Topics</h2>
-                <p className="text-xs opacity-70">
-                  Default: all topics selected. You can deselect all topics, but you need at least one to start.
-                </p>
-
-                {isStartingExam ? <SkeletonLoader lines={5} /> : null}
-
-                <div className="flex flex-col lg:grid lg:grid-cols-[1.2fr_1fr] gap-4 items-start">
-                  <div className="w-full">{renderCategoryFieldset("Technology")}</div>
-                  <div className="w-full flex flex-col gap-4">
-                    {renderCategoryFieldset("Management")}
-                    {renderCategoryFieldset("Strategy")}
-                  </div>
+            {/* Interactive Year Filter Chips */}
+            <div className="card-brut p-5 md:p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h2 className="text-lg md:text-xl font-bold">Exam Source Years</h2>
+                  <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400 ml-1">
+                    ({selectedYears.length}/{allYears.length} selected)
+                  </span>
                 </div>
-              </section>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSelectAllYears}
+                    className={`text-xs font-mono font-bold px-2.5 py-1 border transition-all cursor-pointer ${
+                      isAllYearsSelected
+                        ? "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-950 dark:border-zinc-100"
+                        : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950"
+                    }`}
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearYears}
+                    className="text-xs font-mono font-bold px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 transition-all cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-red-600"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
 
-              
+              {/* Year Pills Strip */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {allYears.map((year) => {
+                  const isSelected = selectedYears.includes(year);
+                  return (
+                    <button
+                      key={year}
+                      type="button"
+                      onClick={() => toggleYear(year)}
+                      className={`px-3.5 py-1.5 text-xs font-mono font-bold border-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
+                          : "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
+                      }`}
+                    >
+                      {isSelected ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
+                      {year}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Interactive Domain & Topic Filter Matrix */}
+            <div className="card-brut p-5 md:p-6 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h2 className="text-lg md:text-xl font-bold">Knowledge Domains & Topics</h2>
+                  <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400 ml-1">
+                    ({selectedTopics.length}/{allTopics.length} selected)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSelectAllTopics}
+                    className={`text-xs font-mono font-bold px-2.5 py-1 border transition-all cursor-pointer ${
+                      isAllTopicsSelected
+                        ? "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-950 dark:border-zinc-100"
+                        : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950"
+                    }`}
+                  >
+                    Select All Topics
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearTopics}
+                    className="text-xs font-mono font-bold px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 transition-all cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-red-600"
+                  >
+                    Clear Topics
+                  </button>
+                </div>
+              </div>
+
+              {/* 3 Domain Sections */}
+              <div className="space-y-6">
+                {(["Technology", "Management", "Strategy"] as CategoryName[]).map((categoryName) => {
+                  const topics = categoryTopics[categoryName];
+                  const selectedCount = topics.filter((t) => selectedTopics.includes(t)).length;
+                  const isAllCategorySelected = selectedCount === topics.length;
+
+                  return (
+                    <div
+                      key={categoryName}
+                      className="border-2 border-zinc-200 dark:border-zinc-800 p-4 bg-zinc-50/50 dark:bg-zinc-900/40 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-heading font-extrabold text-sm md:text-base tracking-wide uppercase">
+                            {categoryName}
+                          </span>
+                          <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                            [{selectedCount}/{topics.length}]
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(categoryName)}
+                          className={`text-xs font-mono font-semibold px-2 py-0.5 border transition-all cursor-pointer ${
+                            isAllCategorySelected
+                              ? "bg-zinc-200 dark:bg-zinc-700 border-zinc-400 dark:border-zinc-600 text-zinc-800 dark:text-zinc-200"
+                              : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 text-zinc-600 dark:text-zinc-400"
+                          }`}
+                        >
+                          {isAllCategorySelected ? "Deselect All" : "Select All"}
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {topics.map((topic) => {
+                          const isSelected = selectedTopics.includes(topic);
+                          return (
+                            <button
+                              key={topic}
+                              type="button"
+                              onClick={() => toggleTopic(topic)}
+                              className={`px-3 py-1.5 text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                                isSelected
+                                  ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-200 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
+                                  : "border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
+                              }`}
+                            >
+                              <span
+                                className={`w-2 h-2 rounded-full ${
+                                  isSelected
+                                    ? "bg-blue-500 dark:bg-blue-400"
+                                    : "bg-zinc-300 dark:bg-zinc-700"
+                                }`}
+                              />
+                              {topic}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Summary & Launch Sidebar (Right Column) */}
+          <div className="lg:col-span-4 sticky top-6 space-y-4">
+            <div className="card-brut p-6 space-y-6">
+              <div className="flex items-center justify-between border-b-2 border-zinc-950 dark:border-zinc-100 pb-3">
+                <div>
+                  <span className="badge-brut bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 border-blue-600 dark:border-blue-400">
+                    LIVE BLUEPRINT
+                  </span>
+                  <h3 className="text-xl font-heading font-extrabold mt-1">
+                    Exam Specification
+                  </h3>
+                </div>
+              </div>
+
+              {/* Prominent Monospace Counter */}
+              <div className="border-2 border-zinc-950 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-800/60 p-4 text-center space-y-1">
+                <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-bold">
+                  Eligible Question Pool
+                </span>
+                <div className="text-4xl md:text-5xl font-mono font-black text-blue-600 dark:text-blue-400">
+                  {availableCount}
+                </div>
+                <div className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                  Target: <strong>{questionCountInput || 0} Questions</strong>
+                </div>
+              </div>
+
+              {/* Spec Rows */}
+              <div className="space-y-2.5 text-xs md:text-sm font-mono divide-y divide-zinc-200 dark:divide-zinc-800">
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-zinc-500 dark:text-zinc-400">Exam Mode:</span>
+                  <strong className="text-zinc-950 dark:text-zinc-100">{examType}</strong>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-zinc-500 dark:text-zinc-400">Time Limit:</span>
+                  <strong className="text-zinc-950 dark:text-zinc-100">
+                    {isTimed ? `${durationInput || 0} minutes` : "Untimed"}
+                  </strong>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-zinc-500 dark:text-zinc-400">Answer Reveal:</span>
+                  <strong className="text-zinc-950 dark:text-zinc-100">
+                    {instantAnswers ? "Instant Reveal" : "Standard (End of Exam)"}
+                  </strong>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-zinc-500 dark:text-zinc-400">Selected Years:</span>
+                  <strong className="text-zinc-950 dark:text-zinc-100">
+                    {selectedYears.length} of {allYears.length}
+                  </strong>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-zinc-500 dark:text-zinc-400">Selected Topics:</span>
+                  <strong className="text-zinc-950 dark:text-zinc-100">
+                    {selectedTopics.length} of {allTopics.length}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Live Inline Validation Warnings */}
+              {availableCount === 0 ? (
+                <div className="border border-red-500 bg-red-50 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300 font-medium flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                  <span>
+                    No questions match your current filters. Select more topics or years to generate an exam.
+                  </span>
+                </div>
+              ) : selectedTopics.length === 0 ? (
+                <div className="border border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs text-amber-700 dark:text-amber-300 font-medium flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                  <span>Please select at least 1 topic to proceed.</span>
+                </div>
+              ) : selectedYears.length === 0 ? (
+                <div className="border border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs text-amber-700 dark:text-amber-300 font-medium flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                  <span>Please select at least 1 year to proceed.</span>
+                </div>
+              ) : isCountExceedingPool ? (
+                <div className="border border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs text-amber-700 dark:text-amber-300 font-medium flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                  <span>
+                    Question count ({currentCountNum}) exceeds the available pool ({availableCount}).
+                  </span>
+                </div>
+              ) : null}
+
+              {/* Start Mock Exam Action Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleStartExam()}
+                  disabled={isStartingExam || availableCount === 0}
+                  className="btn-solid w-full py-4 text-center text-base md:text-lg uppercase flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isStartingExam ? (
+                    <>
+                      <LoadingSpinner label="" />
+                      <span>BUILDING EXAM...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>START MOCK EXAM</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="text-center">
+                <p className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+                  Real PhilNITS vault questions · Randomized order
+                </p>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-      </Layout>
-
+      {/* Start Error Modal */}
       {startError ? (
         <div
           className="modal-overlay"
@@ -481,20 +995,22 @@ export default function MockExamPrepPage() {
           aria-labelledby="mock-exam-start-error-title"
           onClick={closeStartErrorModal}
         >
-          <div
-            className="modal-panel"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="mock-exam-start-error-title" className="text-2xl md:text-3xl font-bold mb-3 dark:text-white">
-              Unable to Start Mock Exam
-            </h2>
-            <p className="text-sm md:text-base text-red-700 leading-relaxed">{startError}</p>
+          <div className="modal-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center gap-3 text-red-600 mb-3">
+              <AlertTriangle className="w-6 h-6" />
+              <h2 id="mock-exam-start-error-title" className="text-xl md:text-2xl font-bold dark:text-white">
+                Unable to Start Mock Exam
+              </h2>
+            </div>
+            <p className="text-sm md:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              {startError}
+            </p>
 
             <div className="mt-6 flex justify-end">
               <button
                 type="button"
                 onClick={closeStartErrorModal}
-                className="btn-outline px-5 py-2"
+                className="btn-outline px-5 py-2 text-sm"
               >
                 CLOSE
               </button>
@@ -503,6 +1019,7 @@ export default function MockExamPrepPage() {
         </div>
       ) : null}
 
+      {/* Input Validation Error Modal */}
       {inputValidationError ? (
         <div
           className="modal-overlay"
@@ -511,28 +1028,31 @@ export default function MockExamPrepPage() {
           aria-labelledby="mock-exam-input-validation-title"
           onClick={closeInputValidationModal}
         >
-          <div
-            className="modal-panel"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="mock-exam-input-validation-title" className="text-xl md:text-2xl font-bold mb-3 dark:text-white">
-              Input Not Allowed
-            </h2>
-            <p className="text-sm md:text-base text-red-700 leading-relaxed">{inputValidationError}</p>
+          <div className="modal-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center gap-3 text-amber-600 mb-3">
+              <HelpCircle className="w-6 h-6" />
+              <h2 id="mock-exam-input-validation-title" className="text-xl md:text-2xl font-bold dark:text-white">
+                Configuration Notice
+              </h2>
+            </div>
+            <p className="text-sm md:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              {inputValidationError}
+            </p>
 
             <div className="mt-6 flex justify-end">
               <button
                 type="button"
                 onClick={closeInputValidationModal}
-                className="btn-outline px-5 py-2"
+                className="btn-outline px-5 py-2 text-sm"
               >
-                CLOSE
+                GOT IT
               </button>
             </div>
           </div>
         </div>
       ) : null}
 
+      {/* Resume Session Confirmation Modal */}
       {showResumeModal ? (
         <div
           className="modal-overlay"
@@ -541,36 +1061,33 @@ export default function MockExamPrepPage() {
           aria-labelledby="mock-exam-resume-title"
           onClick={closeResumeModal}
         >
-          <div
-            className="modal-panel"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className="modal-panel" onClick={(event) => event.stopPropagation()}>
             <h2 id="mock-exam-resume-title" className="text-2xl md:text-3xl font-bold mb-3 dark:text-white">
-              Resume Mock Exam?
+              Resume Active Mock Exam?
             </h2>
-            <p className="text-sm md:text-base leading-relaxed opacity-80">
-              You already have an active mock exam in progress. Continue where you left off, or start a new exam and replace it.
+            <p className="text-sm md:text-base leading-relaxed text-zinc-600 dark:text-zinc-300">
+              You already have an active mock exam session in progress. Would you like to resume where you left off, or start a new exam and replace your current progress?
             </p>
 
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={handleResumeExam}
-                className="btn-solid px-5 py-2"
+                className="btn-solid px-5 py-2.5 flex items-center justify-center gap-2"
               >
-                RESUME EXAM
+                <Play className="w-4 h-4" /> RESUME EXAM
               </button>
               <button
                 type="button"
                 onClick={() => handleStartExam(true)}
-                className="btn-outline px-5 py-2"
+                className="btn-outline px-5 py-2.5 flex items-center justify-center gap-2 hover:border-red-600 hover:text-red-600"
               >
-                START NEW EXAM
+                <RotateCcw className="w-4 h-4" /> START NEW EXAM
               </button>
             </div>
           </div>
         </div>
       ) : null}
-    </>
+    </Layout>
   );
 }

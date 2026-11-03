@@ -6,16 +6,9 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: {
-    fs: {
-      // Allow serving files from the philnits-vault directory (for question images)
-      allow: ['..'],
-    },
-  },
   resolve: {
     alias: {
-      '@vault': path.resolve(__dirname, '../philnits-vault'),
+      '@vault': path.resolve(__dirname, './philnits-vault'),
     },
   },
 })
-

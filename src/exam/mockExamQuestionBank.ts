@@ -3,10 +3,28 @@ import {
   allTopics,
   categoryTopics,
   type CategoryName,
+  type MockExamOption,
   type MockExamQuestion,
   type MockExamSession,
   type MockExamSettings,
 } from "./mockExamModel";
+
+export type PreviousExamQuestion = {
+  id: string;
+  year: string;
+  examCode: string;
+  examType: MockExamSettings["examType"];
+  questionNumber: string;
+  subjectTopic: string;
+  subjectCategory: CategoryName | "Uncategorized";
+  questionText: string;
+  tableText: string | null;
+  questionImagePath: string | null;
+  options: MockExamOption[];
+  correctOption: string;
+  correctOptionText: string | null;
+  answerExplanation: string | null;
+};
 
 type ParsedVaultQuestion = {
   sourcePath: string;
@@ -24,10 +42,57 @@ type ParsedVaultQuestion = {
   tableMarkdown: string | null;
 };
 
+const vaultImageModules = import.meta.glob("../../philnits-vault/**/*.{png,jpg,jpeg,gif,webp,svg}", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+const normalizedVaultImageMap = new Map<string, string>();
+for (const [rawKey, resolvedUrl] of Object.entries(vaultImageModules)) {
+  const normalizedKey = rawKey
+    .replace(/\\/g, "/")
+    .replace(/^(?:\.\.\/)+/, "/")
+    .replace(/^\.\//, "/");
+  normalizedVaultImageMap.set(normalizedKey.toLowerCase(), resolvedUrl);
+  const fileName = normalizedKey.split("/").pop()?.toLowerCase();
+  if (fileName && !normalizedVaultImageMap.has(`filename:${fileName}`)) {
+    normalizedVaultImageMap.set(`filename:${fileName}`, resolvedUrl);
+  }
+}
+
+export const resolveVaultImageUrl = (candidatePath: string | null | undefined): string | null => {
+  if (!candidatePath) {
+    return null;
+  }
+  const trimmed = candidatePath.trim().replace(/\\/g, "/");
+  if (!trimmed) {
+    return null;
+  }
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:")) {
+    return trimmed;
+  }
+
+  const normalized = (trimmed.startsWith("/") ? trimmed : `/${trimmed.replace(/^(?:\.\.\/)+/, "")}`).toLowerCase();
+  const exactMatch = normalizedVaultImageMap.get(normalized);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const fileName = normalized.split("/").pop();
+  if (fileName) {
+    const byFileName = normalizedVaultImageMap.get(`filename:${fileName}`);
+    if (byFileName) {
+      return byFileName;
+    }
+  }
+
+  return null;
+};
+
 const shouldIgnoreSourcePath = (sourcePath: string): boolean => {
   const normalizedPath = sourcePath.replace(/\\/g, "/");
   const fileName = normalizedPath.split("/").pop()?.toLowerCase() ?? "";
-  return fileName.endsWith("_questions.md");
+  return fileName.endsWith("_questions.md") || fileName === "answer-key.md";
 };
 
 const isString = (value: unknown): value is string => typeof value === "string";
@@ -58,7 +123,7 @@ const isVaultCommentLine = (line: string): boolean => {
   return /^%%.*%%$/.test(trimmed) || trimmed === "%%";
 };
 
-const deriveCategoryFromTopic = (topic: string): CategoryName | "Uncategorized" => {
+export const deriveCategoryFromTopic = (topic: string): CategoryName | "Uncategorized" => {
   const foundCategory = (Object.keys(categoryTopics) as CategoryName[]).find((categoryName) =>
     categoryTopics[categoryName].some((knownTopic) => knownTopic === topic),
   );
@@ -213,12 +278,10 @@ const requiresVisualContent = (
   containsMarkdownTable: boolean,
   tableMarkdown: string | null,
 ): boolean => {
-  // If the question has an inline image reference, it can render an image container — don't exclude it.
   if (questionImagePath) {
     return false;
   }
 
-  // If the question has a markdown table, it can be rendered — don't exclude it.
   if (containsMarkdownTable && tableMarkdown) {
     return false;
   }
@@ -227,47 +290,71 @@ const requiresVisualContent = (
   return /\b(figure|diagram|graph|chart|flowchart|shown below|as shown|refer to the (?:following )?(?:figure|table)|legend|in the figure|in the table|see figure|see table)\b/i.test(combined);
 };
 
-const toQuestionImagePath = (sourcePath: string, imageFileName: string): string => {
+const toQuestionImagePath = (sourcePath: string, imageFileName: string): string | null => {
   const normalizedFileName = imageFileName.trim().replace(/\\/g, "/");
   const sourceDir = sourcePath.split("/").slice(0, -1).join("/");
   const candidate = `${sourceDir}/${normalizedFileName}`;
 
-  // Resolve to a root-relative path so runtime routes do not break image URLs.
   const rootRelativePath = candidate.replace(/^(?:\.\.\/)+/, "/").replace(/^\.\//, "/");
-  return rootRelativePath.startsWith("/") ? rootRelativePath : `/${rootRelativePath}`;
+  const normalizedRootRelative = rootRelativePath.startsWith("/") ? rootRelativePath : `/${rootRelativePath}`;
+  return resolveVaultImageUrl(normalizedRootRelative);
 };
 
-const parseOptionPrefix = (line: string): { key: string; text: string } | null => {
-  const stripped = stripInlineMarkdown(line);
-  const match = stripped.match(/^([A-Da-d])[.)]\s*(.+)$/);
+const parseOptionPrefix = (line: string, sourcePath?: string): MockExamOption | null => {
+  const trimmed = line.trim();
+  const match = trimmed.match(/^([A-Da-d])[.)]\s*(.*)$/);
   if (!match) {
     return null;
   }
 
+  const key = match[1].toUpperCase();
+  let rawText = match[2].trim();
+  let imagePath: string | null = null;
+
+  const obsidianImg = rawText.match(/!\[\[([^\]]+)\]\]/);
+  if (obsidianImg) {
+    imagePath = sourcePath ? toQuestionImagePath(sourcePath, obsidianImg[1]) : resolveVaultImageUrl(obsidianImg[1]);
+    rawText = rawText.replace(obsidianImg[0], "").trim();
+  } else {
+    const bracketImg = rawText.match(/\[([^\]]+\.(?:png|jpg|jpeg|gif|webp|svg))\]/i);
+    if (bracketImg) {
+      if (sourcePath) {
+        const rootRelativeDir = sourcePath
+          .replace(/\\/g, "/")
+          .replace(/^\.\.\/\.\.\//, "/")
+          .split("/")
+          .slice(0, -1)
+          .join("/");
+        imagePath = resolveVaultImageUrl(`${rootRelativeDir}/images/${bracketImg[1]}`) ?? resolveVaultImageUrl(bracketImg[1]);
+      } else {
+        imagePath = resolveVaultImageUrl(bracketImg[1]);
+      }
+      rawText = rawText.replace(bracketImg[0], "").trim();
+    }
+  }
+
   return {
-    key: match[1].toUpperCase(),
-    text: normalizeSpaces(match[2]),
+    key,
+    text: normalizeSpaces(stripInlineMarkdown(rawText)),
+    imagePath,
   };
 };
 
-const extractOptionsFromLines = (optionLines: string[]): { key: string; text: string }[] => {
-  const byKey = new Map<string, string>();
+const extractOptionsFromLines = (optionLines: string[], sourcePath?: string): MockExamOption[] => {
+  const byKey = new Map<string, MockExamOption>();
 
   optionLines.forEach((line) => {
-    const parsed = parseOptionPrefix(line);
+    const parsed = parseOptionPrefix(line, sourcePath);
     if (!parsed) {
       return;
     }
 
-    byKey.set(parsed.key, parsed.text);
+    byKey.set(parsed.key, parsed);
   });
 
   return ["A", "B", "C", "D"]
     .filter((key) => byKey.has(key))
-    .map((key) => ({
-      key,
-      text: byKey.get(key) ?? "",
-    }));
+    .map((key) => byKey.get(key)!);
 };
 
 const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedVaultQuestion | null => {
@@ -308,7 +395,6 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
 
   const bodyLines = lines.slice(headingIndex + 1, delimiterIndex);
 
-  // Detect and extract markdown tables from the question body.
   const tableLineRanges: Array<{ start: number; end: number }> = [];
   let tableStart = -1;
   for (let i = 0; i < bodyLines.length; i++) {
@@ -330,7 +416,6 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
   const tableLineIndices = new Set<number>();
   const tableChunks: string[] = [];
   for (const range of tableLineRanges) {
-    // A valid markdown table needs at least a header row and a separator row.
     if (range.end - range.start >= 1) {
       const chunk = bodyLines.slice(range.start, range.end + 1).map((l) => l.trimEnd()).join("\n");
       tableChunks.push(chunk);
@@ -354,7 +439,6 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
       return;
     }
 
-    // Skip lines that belong to an extracted table.
     if (tableLineIndices.has(lineIndex)) {
       return;
     }
@@ -371,35 +455,28 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
       return;
     }
 
-    // Detect inline bracket image references like [2025A_FE-S_4.png]
     const inlineImageMatch = line.match(/^\[([^\]]+\.(?:png|jpg|jpeg|gif|webp|svg))\]$/i);
     if (inlineImageMatch) {
       if (!firstImagePath) {
-        // Build a root-relative URL: strip the leading ../../ from the vault glob path,
-        // then replace the filename with images/<imagefile>.
-        // e.g. ../../philnits-vault/2025/2025A_FE-S_4.md -> /philnits-vault/2025/images/2025A_FE-S_4.png
         const rootRelativeDir = normalizedPath
           .replace(/^\.\.\/\.\.\//, "/")
           .split("/")
           .slice(0, -1)
           .join("/");
-        firstImagePath = `${rootRelativeDir}/images/${inlineImageMatch[1]}`;
+        firstImagePath = resolveVaultImageUrl(`${rootRelativeDir}/images/${inlineImageMatch[1]}`);
       }
       return;
     }
 
-    const option = parseOptionPrefix(line);
+    const option = parseOptionPrefix(line, normalizedPath);
     if (option) {
-      optionLines.push(`${option.key}. ${option.text}`);
+      optionLines.push(line);
       currentOptionIndex = optionLines.length - 1;
       return;
     }
 
     if (currentOptionIndex >= 0) {
-      const continuedText = normalizeSpaces(stripInlineMarkdown(line));
-      if (continuedText) {
-        optionLines[currentOptionIndex] = `${optionLines[currentOptionIndex]} ${continuedText}`.trim();
-      }
+      optionLines[currentOptionIndex] = `${optionLines[currentOptionIndex]} ${line}`.trim();
       return;
     }
 
@@ -449,9 +526,62 @@ const vaultMarkdownModules = import.meta.glob("../../philnits-vault/**/*.md", {
   import: "default",
 }) as Record<string, string>;
 
-const parsedVaultQuestions: ParsedVaultQuestion[] = Object.entries(vaultMarkdownModules)
+const rawParsedVaultQuestions: ParsedVaultQuestion[] = Object.entries(vaultMarkdownModules)
   .map(([sourcePath, rawMarkdown]) => parseMarkdownQuestion(sourcePath, rawMarkdown))
   .filter((entry): entry is ParsedVaultQuestion => Boolean(entry));
+
+const canonicalizeExamCode = (code: string): string => {
+  const trimmed = code.trim();
+  if (trimmed === "2025A_FE-S") {
+    return "2025S_FE-A";
+  }
+  if (trimmed === "2018A_FE") {
+    return "2018A_FE_AM";
+  }
+  return trimmed;
+};
+
+const canonicalizeQuestionNumber = (num: string): string => {
+  const numeric = parseInt(num, 10);
+  if (!Number.isNaN(numeric)) {
+    return numeric.toString();
+  }
+  return num.trim();
+};
+
+const deduplicatedVaultQuestionsMap = new Map<string, ParsedVaultQuestion>();
+
+for (const q of rawParsedVaultQuestions) {
+  const canonicalCode = canonicalizeExamCode(q.examCode);
+  const canonicalNumber = canonicalizeQuestionNumber(q.questionNumber);
+  const key = `${q.sourceYear}::${canonicalCode}::${canonicalNumber}`;
+
+  const normalizedQ: ParsedVaultQuestion = {
+    ...q,
+    examCode: canonicalCode,
+    questionNumber: canonicalNumber,
+  };
+
+  const existing = deduplicatedVaultQuestionsMap.get(key);
+  if (!existing) {
+    deduplicatedVaultQuestionsMap.set(key, normalizedQ);
+  } else {
+    const existingExplanationLen = existing.answerExplanation?.length ?? 0;
+    const newExplanationLen = normalizedQ.answerExplanation?.length ?? 0;
+    const preferredBase = newExplanationLen >= existingExplanationLen ? normalizedQ : existing;
+    const fallback = newExplanationLen >= existingExplanationLen ? existing : normalizedQ;
+
+    deduplicatedVaultQuestionsMap.set(key, {
+      ...preferredBase,
+      questionImagePath: preferredBase.questionImagePath ?? fallback.questionImagePath,
+      tableMarkdown: preferredBase.tableMarkdown ?? fallback.tableMarkdown,
+      containsMarkdownTable: preferredBase.containsMarkdownTable || fallback.containsMarkdownTable,
+      subjectTopic: preferredBase.subjectTopic !== "Software Engineering & Design" ? preferredBase.subjectTopic : fallback.subjectTopic,
+    });
+  }
+}
+
+const parsedVaultQuestions: ParsedVaultQuestion[] = Array.from(deduplicatedVaultQuestionsMap.values());
 
 const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
   const selectedTopics = new Set(settings.selectedTopics);
@@ -463,7 +593,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
     .filter((question) => selectedYears.has(question.sourceYear))
     .filter((question) => !requiresVisualContent(question.questionText, question.optionLines, question.questionImagePath, question.containsMarkdownTable, question.tableMarkdown))
     .map<MockExamQuestion | null>((question, index) => {
-      const options = extractOptionsFromLines(question.optionLines);
+      const options = extractOptionsFromLines(question.optionLines, question.sourcePath);
       if (options.length !== 4) {
         return null;
       }
@@ -484,7 +614,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
         options: options.map((option) => ({
           key: option.key,
           text: option.text,
-          imagePath: null as string | null,
+          imagePath: option.imagePath,
         })),
         correctOption: question.correctOption,
         answerExplanation: question.answerExplanation,
@@ -521,10 +651,106 @@ export const buildMockExamSession = (settings: MockExamSettings): MockExamSessio
     currentQuestionIndex: 0,
     answers: {},
     hintsUsed: 0,
+    elapsedSeconds: 0,
+    isPaused: false,
+    hintShownByQuestion: {},
+    eliminatedOptionsByQuestion: {},
+    flaggedQuestions: {},
   });
 };
 
-export const getEligibleQuestionCount = (settings: MockExamSettings): number => buildQuestionPool(settings).length;
+export const buildStarredQuestionsSession = (bookmarkedIds: string[]): MockExamSession | null => {
+  if (bookmarkedIds.length === 0) {
+    return null;
+  }
+  const idSet = new Set(bookmarkedIds);
+  const matched = parsedVaultQuestions.filter((q) => {
+    const key1 = `${q.examCode}::${q.questionNumber}`;
+    const key2 = `${q.examCode}_${q.questionNumber}`;
+    return idSet.has(q.sourcePath) || 
+      idSet.has(key1) || 
+      idSet.has(key2) || 
+      [...idSet].some((id) => id.includes(q.examCode) && id.includes(q.questionNumber));
+  });
+
+  if (matched.length === 0) {
+    return null;
+  }
+
+  const questions: MockExamQuestion[] = matched.map((question, index) => {
+    const options = extractOptionsFromLines(question.optionLines, question.sourcePath);
+    const subjectCategory = deriveCategoryFromTopic(question.subjectTopic);
+    return {
+      id: `${question.examCode}::${question.questionNumber}::${index}`,
+      pdfName: `${question.examCode}.md`,
+      sourceYear: question.sourceYear,
+      questionNumber: question.questionNumber,
+      questionText: question.questionText,
+      tableText: question.tableMarkdown,
+      questionImagePath: question.questionImagePath,
+      options: options.map((option) => ({
+        key: option.key,
+        text: option.text,
+        imagePath: option.imagePath,
+      })),
+      correctOption: question.correctOption,
+      answerExplanation: question.answerExplanation,
+      subjectCategory,
+      subjectTopic: question.subjectTopic,
+    };
+  });
+
+  const settings: MockExamSettings = {
+    examType: "AM EXAM",
+    isTimed: true,
+    durationMinutes: Math.min(180, Math.max(15, questions.length * 2)),
+    questionCount: questions.length,
+    instantAnswers: true,
+    selectedTopics: [...new Set(questions.map((q) => q.subjectTopic))],
+    selectedYears: [...new Set(questions.map((q) => q.sourceYear))],
+  };
+
+  return attachSessionSchema({
+    sessionId: `starred-session-${Date.now()}`,
+    createdAtMs: Date.now(),
+    startedAtMs: Date.now(),
+    settings,
+    questions,
+    currentQuestionIndex: 0,
+    answers: {},
+    hintsUsed: 0,
+    elapsedSeconds: 0,
+    isPaused: false,
+    hintShownByQuestion: {},
+    eliminatedOptionsByQuestion: {},
+    flaggedQuestions: {},
+  });
+};
+
+export const getEligibleQuestionCount = (settings: MockExamSettings): number => {
+  const selectedTopics = new Set(settings.selectedTopics);
+  const selectedYears = new Set(settings.selectedYears);
+
+  let count = 0;
+  for (const question of parsedVaultQuestions) {
+    if (
+      question.examType === settings.examType &&
+      selectedTopics.has(question.subjectTopic) &&
+      selectedYears.has(question.sourceYear) &&
+      ["A", "B", "C", "D"].includes(question.correctOption) &&
+      !requiresVisualContent(
+        question.questionText,
+        question.optionLines,
+        question.questionImagePath,
+        question.containsMarkdownTable,
+        question.tableMarkdown,
+      )
+    ) {
+      count++;
+    }
+  }
+  return count;
+};
 
 export const getAllAvailableTopics = (): string[] => [...allTopics];
 
@@ -533,4 +759,67 @@ export const getAllAvailableYears = (): string[] => {
     parsedVaultQuestions.map((q) => q.sourceYear).filter((year) => year !== "Unknown")
   );
   return Array.from(years).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+};
+
+const compareQuestionNumbers = (a: string, b: string): number => {
+  const numericA = Number(a);
+  const numericB = Number(b);
+
+  if (!Number.isNaN(numericA) && !Number.isNaN(numericB)) {
+    return numericA - numericB;
+  }
+
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+};
+
+const allPreviousExamQuestions: PreviousExamQuestion[] = parsedVaultQuestions.map((question) => {
+  const options = extractOptionsFromLines(question.optionLines, question.sourcePath);
+  const correctChoice = options.find((choice) => choice.key === question.correctOption);
+  const subjectCategory = deriveCategoryFromTopic(question.subjectTopic);
+
+  return {
+    id: `${question.sourcePath}::${question.examCode}_${question.questionNumber}`,
+    year: question.sourceYear,
+    examCode: question.examCode,
+    examType: question.examType,
+    questionNumber: question.questionNumber,
+    subjectTopic: question.subjectTopic,
+    subjectCategory,
+    questionText: question.questionText,
+    tableText: question.tableMarkdown,
+    questionImagePath: question.questionImagePath,
+    options,
+    correctOption: question.correctOption,
+    correctOptionText: correctChoice?.text ?? null,
+    answerExplanation: question.answerExplanation,
+  };
+});
+
+export const getAllPreviousExamQuestions = (): PreviousExamQuestion[] => allPreviousExamQuestions;
+
+export const getGroupedPreviousExamQuestions = (): Array<{
+  year: string;
+  questions: PreviousExamQuestion[];
+}> => {
+  const grouped = allPreviousExamQuestions.reduce<Record<string, PreviousExamQuestion[]>>(
+    (accumulator, question) => {
+      if (!accumulator[question.year]) {
+        accumulator[question.year] = [];
+      }
+      accumulator[question.year].push(question);
+      return accumulator;
+    },
+    {},
+  );
+
+  return Object.entries(grouped)
+    .map(([year, questions]) => ({
+      year,
+      questions: [...questions].sort((first, second) =>
+        compareQuestionNumbers(first.questionNumber, second.questionNumber),
+      ),
+    }))
+    .sort((first, second) =>
+      second.year.localeCompare(first.year, undefined, { numeric: true }),
+    );
 };

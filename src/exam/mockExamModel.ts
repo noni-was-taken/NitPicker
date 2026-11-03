@@ -75,6 +75,11 @@ export type MockExamSession = {
   currentQuestionIndex: number;
   answers: Record<string, string>;
   hintsUsed: number;
+  elapsedSeconds?: number;
+  isPaused?: boolean;
+  hintShownByQuestion?: Record<string, boolean>;
+  eliminatedOptionsByQuestion?: Record<string, string[]>;
+  flaggedQuestions?: Record<string, boolean>;
 };
 
 export type TopicBreakdown = {
@@ -94,13 +99,28 @@ export type WrongQuestionReview = {
   id: string;
   sourceYear: string;
   questionNumber: string;
+  subjectCategory?: string;
   subjectTopic: string;
   questionText: string;
+  tableText?: string | null;
+  questionImagePath?: string | null;
   selectedOption: string | null;
   selectedOptionText: string | null;
   correctOption: string;
   correctOptionText: string | null;
   answerExplanation: string | null;
+};
+
+export type ExamHistoryEntry = {
+  id: string;
+  completedAtMs: number;
+  examType: MockExamSettings["examType"];
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  passed: boolean;
+  totalTimeSeconds: number;
+  categorySummary: { name: string; score: number; total: number }[];
 };
 
 export type MockExamResult = {
@@ -120,6 +140,8 @@ export type MockExamResult = {
 
 const SESSION_STORAGE_KEY = "ofa.mockExam.currentSession";
 const RESULT_STORAGE_KEY = "ofa.mockExam.latestResult";
+const HISTORY_STORAGE_KEY = "ofa.mockExam.history";
+const BOOKMARKS_STORAGE_KEY = "ofa.mockExam.bookmarks";
 const SESSION_SCHEMA_VERSION = 4;
 
 const extractYearFromText = (value: string | null | undefined): string | null => {
@@ -263,6 +285,61 @@ export const clearMockExamResult = () => {
   }
 };
 
+export const loadExamHistory = (): ExamHistoryEntry[] => {
+  const loaded = safeLoad<ExamHistoryEntry[]>(HISTORY_STORAGE_KEY);
+  if (!Array.isArray(loaded)) {
+    return [];
+  }
+  return loaded.slice(0, 50); // Keep last 50 attempts
+};
+
+export const saveExamHistoryEntry = (entry: ExamHistoryEntry) => {
+  const existing = loadExamHistory();
+  const next = [entry, ...existing.filter((item) => item.id !== entry.id)].slice(0, 50);
+  safeSave(HISTORY_STORAGE_KEY, next);
+};
+
+export const clearExamHistory = () => {
+  try {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+  } catch {
+    // Ignore localStorage failures.
+  }
+};
+
+export const loadBookmarkedQuestionIds = (): string[] => {
+  const loaded = safeLoad<string[]>(BOOKMARKS_STORAGE_KEY);
+  if (!Array.isArray(loaded)) {
+    return [];
+  }
+  return [...new Set(loaded.filter((id): id is string => typeof id === "string" && id.length > 0))];
+};
+
+export const isQuestionBookmarked = (questionId: string): boolean => {
+  const bookmarks = loadBookmarkedQuestionIds();
+  return bookmarks.includes(questionId);
+};
+
+export const toggleQuestionBookmark = (questionId: string): boolean => {
+  const bookmarks = loadBookmarkedQuestionIds();
+  const exists = bookmarks.includes(questionId);
+  const next = exists ? bookmarks.filter((id) => id !== questionId) : [...bookmarks, questionId];
+  safeSave(BOOKMARKS_STORAGE_KEY, next);
+  return !exists;
+};
+
+export const bookmarkMultipleQuestions = (questionIds: string[]) => {
+  const bookmarks = loadBookmarkedQuestionIds();
+  const next = [...new Set([...bookmarks, ...questionIds])];
+  safeSave(BOOKMARKS_STORAGE_KEY, next);
+};
+
+export const removeBookmarkedQuestion = (questionId: string) => {
+  const bookmarks = loadBookmarkedQuestionIds();
+  const next = bookmarks.filter((id) => id !== questionId);
+  safeSave(BOOKMARKS_STORAGE_KEY, next);
+};
+
 export const deriveSelectedCategories = (selectedTopics: string[]): string[] => {
   const selectedSet = new Set(selectedTopics);
 
@@ -320,8 +397,11 @@ export const computeMockExamResult = (
         id: question.id,
         sourceYear,
         questionNumber: question.questionNumber,
+        subjectCategory: question.subjectCategory,
         subjectTopic: question.subjectTopic,
         questionText: question.questionText,
+        tableText: question.tableText,
+        questionImagePath: question.questionImagePath,
         selectedOption: selectedAnswer ?? null,
         selectedOptionText: selectedChoice?.text?.trim() ? selectedChoice.text : null,
         correctOption: question.correctOption,

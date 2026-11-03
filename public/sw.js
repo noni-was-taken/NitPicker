@@ -5,7 +5,3 @@ self.addEventListener('install', () => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim())
 })
-
-self.addEventListener('fetch', () => {
-  // Placeholder service worker for PWA baseline.
-})

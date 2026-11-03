@@ -3,48 +3,56 @@
 @import "./styles/components.css";
 
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  --text: #3f3f46;
+  --text-h: #09090b;
+  --bg: #fafafa;
+  --surface-base: #fafafa;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f4f4f5;
+  --border: #d4d4d8;
+  --border-strong: #09090b;
+  --code-bg: #f4f4f5;
+  --accent: #2563eb;
+  --accent-bg: rgba(37, 99, 235, 0.1);
+  --accent-border: rgba(37, 99, 235, 0.5);
+  --social-bg: rgba(244, 244, 245, 0.8);
+  --shadow-brut-sm: 3px 3px 0px 0px #09090b;
+  --shadow-brut-md: 5px 5px 0px 0px #09090b;
   --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    rgba(0, 0, 0, 0.08) 0 10px 15px -3px, rgba(0, 0, 0, 0.04) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Space Grotesk', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  font: 16px/155% var(--sans);
+  letter-spacing: -0.01em;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
 html.dark {
-  --text: #d0ccd6;
-  --text-h: #f5f2f9;
+  --text: #a1a1aa;
+  --text-h: #fafafa;
   --bg: #09090b;
-  --border: #2a282f;
-  --code-bg: #1a191f;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.15);
-  --accent-border: rgba(170, 59, 255, 0.6);
-  --social-bg: rgba(26, 25, 31, 0.8);
+  --surface-base: #09090b;
+  --surface-raised: #121215;
+  --surface-sunken: #18181b;
+  --border: #27272a;
+  --border-strong: #f4f4f5;
+  --code-bg: #18181b;
+  --accent: #3b82f6;
+  --accent-bg: rgba(59, 130, 246, 0.15);
+  --accent-border: rgba(59, 130, 246, 0.6);
+  --social-bg: rgba(24, 24, 27, 0.85);
+  --shadow-brut-sm: 3px 3px 0px 0px #f4f4f5;
+  --shadow-brut-md: 5px 5px 0px 0px #f4f4f5;
   --shadow:
-    rgba(0, 0, 0, 0.3) 0 10px 15px -3px, rgba(0, 0, 0, 0.2) 0 4px 6px -2px;
+    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
 }
 
 html,
@@ -67,32 +75,55 @@ body {
   margin: 0;
   padding: 0;
   display: block;
-  background: #fff;
-  color: #000;
+  background: var(--bg);
+  color: var(--text-h);
 }
 
 html.dark body {
-  background: #09090b;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text-h);
 }
 
-/* Keep scroll behavior but hide visible scrollbars across browsers. */
+/* Custom crisp neo-brutalist scrollbars */
 * {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(9, 9, 11, 0.35) transparent;
+}
+
+html.dark * {
+  scrollbar-color: rgba(244, 244, 245, 0.35) transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(9, 9, 11, 0.35);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(9, 9, 11, 0.65);
+}
+
+html.dark *::-webkit-scrollbar-thumb {
+  background: rgba(244, 244, 245, 0.35);
+}
+
+html.dark *::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 244, 245, 0.65);
 }
 
 @layer base {
   h1,
-  h2 {
+  h2,
+  h3 {
     font-family: var(--heading);
-    font-weight: 500;
     margin: 0;
   }
 
@@ -117,17 +148,13 @@ html.dark body {
   }
 }
 
-code,
-.counter {
+code {
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
   color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
+  font-size: 0.9em;
+  line-height: 1.35;
+  padding: 2px 6px;
   background: var(--code-bg);
 }

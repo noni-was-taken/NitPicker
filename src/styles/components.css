@@ -1,51 +1,94 @@
 @layer components {
   .btn-outline {
-    @apply border-2 border-black dark:border-white font-bold transition-colors duration-200;
+    @apply border-2 border-zinc-950 dark:border-zinc-100 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 font-bold tracking-wide transition-all duration-150 cursor-pointer;
   }
 
-  .btn-outline:hover {
-    @apply bg-black text-white dark:bg-white dark:text-black;
+  .btn-outline:hover:not(:disabled) {
+    @apply bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950;
+    box-shadow: var(--shadow-brut-sm);
+    transform: translate(-1px, -1px);
+  }
+
+  .btn-outline:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: none;
   }
 
   .btn-solid {
-    @apply border-2 border-black dark:border-white bg-black text-white dark:bg-white dark:text-black font-bold transition-colors duration-200;
+    @apply border-2 border-zinc-950 dark:border-zinc-100 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold tracking-wide transition-all duration-150 cursor-pointer;
+    box-shadow: var(--shadow-brut-sm);
   }
 
-  .btn-solid:hover {
-    @apply bg-white text-black dark:bg-black dark:text-white;
+  .btn-solid:hover:not(:disabled) {
+    @apply bg-blue-600 border-zinc-950 text-white dark:bg-blue-500 dark:border-zinc-100 dark:text-zinc-950;
+    transform: translate(-1px, -1px);
+  }
+
+  .btn-solid:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+
+  .card-brut {
+    @apply border-2 border-zinc-950 dark:border-zinc-200 bg-white dark:bg-zinc-900;
+    box-shadow: var(--shadow-brut-sm);
+  }
+
+  .badge-brut {
+    @apply inline-flex items-center gap-1.5 border border-zinc-950 dark:border-zinc-300 px-2.5 py-0.5 text-xs font-mono font-semibold uppercase tracking-wider;
   }
 
   .form-input {
-    @apply border-2 px-3 py-2 dark:border-white/50 dark:bg-zinc-800 dark:text-white;
+    @apply border-2 border-zinc-950 dark:border-zinc-300 bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-950 dark:text-zinc-100 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500;
   }
 
   .modal-overlay {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-md px-4;
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4;
   }
 
   .modal-panel {
-    @apply w-full max-w-xl border-2 border-black dark:border-white bg-white dark:bg-zinc-900 p-6 md:p-8 shadow-2xl;
+    @apply w-full max-w-xl border-2 border-zinc-950 dark:border-zinc-100 bg-white dark:bg-zinc-900 p-6 md:p-8;
+    box-shadow: var(--shadow-brut-md);
   }
 }
 
-/* Markdown table rendering inside mock exam questions */
+/* Markdown table rendering inside mock exam & archive questions */
+.question-table-wrap {
+  overflow-x: auto;
+}
+
 .question-table-wrap table {
   border-collapse: collapse;
   width: 100%;
+  font-size: 0.925rem;
 }
 
 .question-table-wrap th,
 .question-table-wrap td {
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  padding: 6px 12px;
+  border: 1.5px solid rgba(9, 9, 11, 0.35);
+  padding: 8px 12px;
   text-align: left;
 }
 
 .question-table-wrap th {
   font-weight: 700;
+  font-family: var(--mono);
+  background-color: rgba(9, 9, 11, 0.05);
+}
+
+.question-table-wrap tr:nth-child(even) td {
+  background-color: rgba(9, 9, 11, 0.02);
 }
 
 :is(.dark) .question-table-wrap th,
 :is(.dark) .question-table-wrap td {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(244, 244, 245, 0.3);
+}
+
+:is(.dark) .question-table-wrap th {
+  background-color: rgba(244, 244, 245, 0.08);
+}
+
+:is(.dark) .question-table-wrap tr:nth-child(even) td {
+  background-color: rgba(244, 244, 245, 0.03);
 }

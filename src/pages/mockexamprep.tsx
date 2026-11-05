@@ -450,6 +450,9 @@ export default function MockExamPrepPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    if (hasActiveSession && !window.confirm("This replaces your mock exam in progress. Start the starred drill anyway?")) {
+                      return;
+                    }
                     const session = buildStarredQuestionsSession(bookmarkedIds);
                     if (session && session.questions.length > 0) {
                       clearMockExamResult();
@@ -541,16 +544,14 @@ export default function MockExamPrepPage() {
                   >
                     AM EXAM (80 Questions)
                   </button>
+                  {/* ponytail: PM case studies have multi-part answers the question model can't hold yet; re-enable when it can. */}
                   <button
                     type="button"
-                    onClick={() => setExamType("PM EXAM")}
-                    className={`py-2.5 px-4 text-sm font-bold border-2 transition cursor-pointer ${
-                      examType === "PM EXAM"
-                        ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 shadow-xs"
-                        : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-950 dark:hover:border-zinc-300 bg-white dark:bg-zinc-900"
-                    }`}
+                    disabled
+                    title="PM case studies are not available yet"
+                    className="py-2.5 px-4 text-sm font-bold border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 opacity-50 cursor-not-allowed"
                   >
-                    PM EXAM (Case Studies)
+                    PM EXAM (Coming soon)
                   </button>
                 </div>
               </div>

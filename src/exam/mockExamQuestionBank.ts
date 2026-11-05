@@ -223,25 +223,17 @@ const mapTagsToTopic = (tags: string[], fallbackText: string): string => {
 };
 
 const parseCorrectOption = (rawAnswerLine: string): string | null => {
-  const cleaned = stripInlineMarkdown(rawAnswerLine);
-  if (!cleaned) {
+  const cleaned = stripInlineMarkdown(rawAnswerLine).replace(/^answer\s*:\s*/i, "");
+
+  // Multi-part keys ("A,B,B,D" or "a/c") are PM-style; not a single answer.
+  if (/^\(?[A-Da-d]\)?\s*[,/]\s*\(?[A-Da-d]\b/.test(cleaned)) {
     return null;
   }
 
-  if (/[A-Za-z]\s*[,/]/.test(cleaned)) {
-    return null;
-  }
-
-  const direct = cleaned.match(/^\(?([A-Da-d])\)?[.)]?\s*/);
-  if (direct) {
-    return direct[1].toUpperCase();
-  }
-
-  if (/^[A-Da-d]$/.test(cleaned)) {
-    return cleaned.toUpperCase();
-  }
-
-  return null;
+  // "b) text", "(b) text", "b. text" or a bare "B". The letter must be followed by a delimiter,
+  // so an answer line that is a sentence ("A full backup...") is not read as answer A.
+  const direct = cleaned.match(/^\(?([A-Da-d])(?:[.)]|$)/);
+  return direct ? direct[1].toUpperCase() : null;
 };
 
 const extractExplanationText = (linesAfterAnswer: string[]): string | null => {
@@ -594,7 +586,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
     .filter((question) => selectedTopics.has(question.subjectTopic))
     .filter((question) => selectedYears.has(question.sourceYear))
     .filter((question) => !requiresVisualContent(question.questionText, question.optionLines, question.questionImagePath, question.containsMarkdownTable, question.tableMarkdown))
-    .map<MockExamQuestion | null>((question, index) => {
+    .map<MockExamQuestion | null>((question) => {
       const options = extractOptionsFromLines(question.optionLines, question.sourcePath);
       if (options.length !== 4) {
         return null;
@@ -606,7 +598,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
 
       const subjectCategory = deriveCategoryFromTopic(question.subjectTopic);
       return {
-        id: `${question.examCode}::${question.questionNumber}::${index}`,
+        id: `${question.examCode}::${question.questionNumber}`, // stable, so bookmarks survive across sessions
         pdfName: `${question.examCode}.md`,
         sourceYear: question.sourceYear,
         questionNumber: question.questionNumber,
@@ -665,25 +657,23 @@ export const buildStarredQuestionsSession = (bookmarkedIds: string[]): MockExamS
   if (bookmarkedIds.length === 0) {
     return null;
   }
-  const idSet = new Set(bookmarkedIds);
-  const matched = parsedVaultQuestions.filter((q) => {
-    const key1 = `${q.examCode}::${q.questionNumber}`;
-    const key2 = `${q.examCode}_${q.questionNumber}`;
-    return idSet.has(q.sourcePath) || 
-      idSet.has(key1) || 
-      idSet.has(key2) || 
-      [...idSet].some((id) => id.includes(q.examCode) && id.includes(q.questionNumber));
-  });
+  // Exact keys only. Accepts mock-exam ids ("code::num", older ones end in "::<index>")
+  // and previous-exam ids ("<sourcePath>::code_num").
+  const idSet = new Set(bookmarkedIds.map((id) => id.replace(/^([^:]+::[^:]+)::\d+$/, "$1")));
+  const matched = parsedVaultQuestions.filter((q) =>
+    idSet.has(`${q.examCode}::${q.questionNumber}`) ||
+    idSet.has(`${q.sourcePath}::${q.examCode}_${q.questionNumber}`),
+  );
 
   if (matched.length === 0) {
     return null;
   }
 
-  const questions: MockExamQuestion[] = matched.map((question, index) => {
+  const questions: MockExamQuestion[] = matched.map((question) => {
     const options = extractOptionsFromLines(question.optionLines, question.sourcePath);
     const subjectCategory = deriveCategoryFromTopic(question.subjectTopic);
     return {
-      id: `${question.examCode}::${question.questionNumber}::${index}`,
+      id: `${question.examCode}::${question.questionNumber}`,
       pdfName: `${question.examCode}.md`,
       sourceYear: question.sourceYear,
       questionNumber: question.questionNumber,
@@ -729,30 +719,9 @@ export const buildStarredQuestionsSession = (bookmarkedIds: string[]): MockExamS
   });
 };
 
-export const getEligibleQuestionCount = (settings: MockExamSettings): number => {
-  const selectedTopics = new Set(settings.selectedTopics);
-  const selectedYears = new Set(settings.selectedYears);
-
-  let count = 0;
-  for (const question of parsedVaultQuestions) {
-    if (
-      question.examType === settings.examType &&
-      selectedTopics.has(question.subjectTopic) &&
-      selectedYears.has(question.sourceYear) &&
-      ["A", "B", "C", "D"].includes(question.correctOption) &&
-      !requiresVisualContent(
-        question.questionText,
-        question.optionLines,
-        question.questionImagePath,
-        question.containsMarkdownTable,
-        question.tableMarkdown,
-      )
-    ) {
-      count++;
-    }
-  }
-  return count;
-};
+// Same filter as the real pool, so "Max" never asks for more than can be built.
+export const getEligibleQuestionCount = (settings: MockExamSettings): number =>
+  buildQuestionPool(settings).length;
 
 export const getAllAvailableTopics = (): string[] => [...allTopics];
 

@@ -9,8 +9,10 @@
     <title>NitPick</title>
     <script>
       // Prevent FOUC (Flash of Unstyled Content) by applying theme before React renders
-      const theme = localStorage.getItem('theme')
-      if (theme === 'dark') {
+      // Saved choice wins; otherwise follow the OS. Storage can throw when it is blocked.
+      let theme = null
+      try { theme = localStorage.getItem('theme') } catch {}
+      if (theme === 'dark' || (theme === null && matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark')
       }
     </script>

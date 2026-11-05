@@ -113,6 +113,8 @@ export default function MockExamPage() {
   });
 
   const hasFinalizedRef = useRef(false);
+  const elapsedSecondsRef = useRef(elapsedSeconds);
+  elapsedSecondsRef.current = elapsedSeconds;
 
   const questions = useMemo(() => session?.questions ?? [], [session]);
   const totalQuestions = questions.length;
@@ -182,8 +184,11 @@ export default function MockExamPage() {
       return;
     }
 
+    // Count from the wall clock, not from ticks: background tabs throttle setInterval.
+    const baseSeconds = elapsedSecondsRef.current;
+    const resumedAtMs = Date.now();
     const timerId = window.setInterval(() => {
-      setElapsedSeconds((currentSeconds) => currentSeconds + 1);
+      setElapsedSeconds(baseSeconds + Math.floor((Date.now() - resumedAtMs) / 1000));
     }, 1000);
 
     return () => window.clearInterval(timerId);
@@ -212,9 +217,6 @@ export default function MockExamPage() {
       finalizeExam(totalDurationSeconds);
     }
   }, [elapsedSeconds, isTimed, session, totalDurationSeconds, finalizeExam]);
-
-  const elapsedSecondsRef = useRef(elapsedSeconds);
-  elapsedSecondsRef.current = elapsedSeconds;
 
   // Session persistence on user interaction (answers, navigation, hints, flags, pause)
   useEffect(() => {
@@ -251,7 +253,7 @@ export default function MockExamPage() {
   // Throttled periodic backup of elapsed timer every 10s (prevents disk IO locks every second)
   useEffect(() => {
     if (!session || isOverallTimerPaused) return;
-    const timer = setInterval(() => {
+    const save = () =>
       saveMockExamSession({
         ...session,
         currentQuestionIndex: currentIndex,
@@ -263,8 +265,13 @@ export default function MockExamPage() {
         eliminatedOptionsByQuestion,
         flaggedQuestions,
       });
-    }, 10000);
-    return () => clearInterval(timer);
+    const timer = setInterval(save, 10000);
+    // Refresh / tab close: save now, so up to 10 s of the clock isn't lost.
+    window.addEventListener("pagehide", save);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("pagehide", save);
+    };
   }, [session, currentIndex, answers, hintsUsed, isOverallTimerPaused, hintShownByQuestion, eliminatedOptionsByQuestion, flaggedQuestions]);
 
   const moveToQuestion = useCallback(
@@ -502,6 +509,47 @@ export default function MockExamPage() {
     handleToggleOverallTimerPause,
   ]);
 
+  // Hooks stay above the early return (rules of hooks).
+  const answerLetterKeys = ["A", "B", "C", "D"] as const;
+  const optionByKey = useMemo(
+    () =>
+      new Map<string, MockExamOption>(
+        (currentQuestion?.options ?? []).map((option) => [option.key, option]),
+      ),
+    [currentQuestion?.options],
+  );
+  const eliminatedOptionSet = useMemo(
+    () => new Set((currentQuestion && eliminatedOptionsByQuestion[currentQuestion.id]) ?? []),
+    [eliminatedOptionsByQuestion, currentQuestion?.id],
+  );
+
+  const renderedQuestionStem = useMemo(() => (
+    <ReactMarkdown
+      remarkPlugins={mathGfmPlugins}
+      rehypePlugins={katexPlugins}
+    >
+      {normalizeMathDelimiters(normalizeLegacySymbols(currentQuestion?.questionText ?? ""))}
+    </ReactMarkdown>
+  ), [currentQuestion?.questionText]);
+
+  const renderedChoiceTexts = useMemo(() => {
+    const map: Record<string, React.ReactNode> = {};
+    answerLetterKeys.forEach((letter) => {
+      const choice = optionByKey.get(letter);
+      if (choice?.text) {
+        map[letter] = (
+          <ReactMarkdown
+            remarkPlugins={mathGfmPlugins}
+            rehypePlugins={katexPlugins}
+          >
+            {normalizeMathDelimiters(normalizeLegacySymbols(choice.text))}
+          </ReactMarkdown>
+        );
+      }
+    });
+    return map;
+  }, [optionByKey]);
+
   if (!session || !currentQuestion) {
     return (
       <Layout className="py-10 md:py-0 gap-6 md:gap-10 select-none">
@@ -538,45 +586,6 @@ export default function MockExamPage() {
   const hintVisible = Boolean(hintShownByQuestion[currentQuestion.id]);
   const isFlagged = Boolean(flaggedQuestions[currentQuestion.id]);
 
-  const answerLetterKeys = ["A", "B", "C", "D"] as const;
-  const optionByKey = useMemo(
-    () =>
-      new Map<string, MockExamOption>(
-        currentQuestion.options.map((option) => [option.key, option]),
-      ),
-    [currentQuestion.options],
-  );
-  const eliminatedOptionSet = useMemo(
-    () => new Set(eliminatedOptionsByQuestion[currentQuestion.id] ?? []),
-    [eliminatedOptionsByQuestion, currentQuestion.id],
-  );
-
-  const renderedQuestionStem = useMemo(() => (
-    <ReactMarkdown
-      remarkPlugins={mathGfmPlugins}
-      rehypePlugins={katexPlugins}
-    >
-      {normalizeMathDelimiters(normalizeLegacySymbols(currentQuestion.questionText))}
-    </ReactMarkdown>
-  ), [currentQuestion.questionText]);
-
-  const renderedChoiceTexts = useMemo(() => {
-    const map: Record<string, React.ReactNode> = {};
-    answerLetterKeys.forEach((letter) => {
-      const choice = optionByKey.get(letter);
-      if (choice?.text) {
-        map[letter] = (
-          <ReactMarkdown
-            remarkPlugins={mathGfmPlugins}
-            rehypePlugins={katexPlugins}
-          >
-            {normalizeMathDelimiters(normalizeLegacySymbols(choice.text))}
-          </ReactMarkdown>
-        );
-      }
-    });
-    return map;
-  }, [optionByKey]);
 
   const resolvedQuestionImageUrl = resolveImageUrl(currentQuestion.questionImagePath);
   const isLastQuestion = currentIndex === totalQuestions - 1;

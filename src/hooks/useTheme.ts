@@ -3,9 +3,8 @@ import { useEffect, useState } from 'react'
 const THEME_EVENT = 'themechange'
 
 export function useTheme() {
-  const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem('theme') === 'dark'
-  })
+  // index.html already applied the saved or OS theme before React loaded.
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
 
   useEffect(() => {
     const root = document.documentElement
@@ -14,7 +13,11 @@ export function useTheme() {
     } else {
       root.classList.remove('dark')
     }
-    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+    try {
+      localStorage.setItem('theme', isDark ? 'dark' : 'light')
+    } catch {
+      // Storage blocked: the theme still works for this visit.
+    }
     window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: { isDark } }))
   }, [isDark])
 

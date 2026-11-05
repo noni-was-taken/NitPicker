@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useDeferredValue } from "react";
 import {
   ChevronDown,
   Search,
@@ -98,12 +98,13 @@ const QuestionAccordionItem = React.memo(function QuestionAccordionItem({
   return (
     <article className="border-2 border-zinc-950 dark:border-zinc-200 bg-white dark:bg-zinc-900 transition shadow-xs">
       {/* Question Accordion Header */}
+      <div className="flex items-start">
       <button
         type="button"
         aria-expanded={isOpen}
         aria-controls={`question-content-${question.id}`}
         onClick={() => onToggleOpen(question.id)}
-        className="w-full p-4 text-left flex items-start justify-between gap-4 cursor-pointer hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors"
+        className="flex-1 min-w-0 p-4 text-left flex items-start justify-between gap-4 cursor-pointer hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors"
       >
         <div className="space-y-2 flex-1">
           {/* Badge Metadata Bar */}
@@ -121,31 +122,6 @@ const QuestionAccordionItem = React.memo(function QuestionAccordionItem({
               · {question.subjectTopic}
             </span>
 
-            {/* Star / Bookmark Button */}
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleBookmark(question.id);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onToggleBookmark(question.id);
-                }
-              }}
-              className={`badge-brut cursor-pointer transition-colors ${
-                isBookmarked
-                  ? "bg-amber-400 text-zinc-950 border-zinc-950 font-bold"
-                  : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-950"
-              }`}
-              title={isBookmarked ? "Starred in Weak Spots" : "Star question"}
-            >
-              <Bookmark className="w-3 h-3 fill-current" />
-              <span>{isBookmarked ? "STARRED" : "STAR"}</span>
-            </span>
 
             {question.questionImagePath || question.options.some((opt) => Boolean(opt.imagePath)) ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-mono text-blue-600 dark:text-blue-400 font-semibold">
@@ -166,6 +142,21 @@ const QuestionAccordionItem = React.memo(function QuestionAccordionItem({
           }`}
         />
       </button>
+      <button
+        type="button"
+        aria-pressed={isBookmarked}
+        onClick={() => onToggleBookmark(question.id)}
+        className={`badge-brut m-4 ml-0 shrink-0 cursor-pointer transition-colors ${
+          isBookmarked
+            ? "bg-amber-400 text-zinc-950 border-zinc-950 font-bold"
+            : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-950"
+        }`}
+        title={isBookmarked ? "Starred in Weak Spots" : "Star question"}
+      >
+        <Bookmark className="w-3 h-3 fill-current" />
+        <span>{isBookmarked ? "STARRED" : "STAR"}</span>
+      </button>
+      </div>
 
       {/* Expanded Question Content */}
       {isOpen ? (
@@ -193,7 +184,15 @@ const QuestionAccordionItem = React.memo(function QuestionAccordionItem({
                   alt={`Diagram for question ${question.questionNumber}`}
                   className="max-w-full h-auto block mx-auto cursor-zoom-in hover:opacity-95 transition-opacity"
                   loading="lazy"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onZoomImage(resolvedImageUrl)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onZoomImage(resolvedImageUrl);
+                    }
+                  }}
                   onError={(e) => {
                     const target = e.currentTarget;
                     target.style.display = "none";
@@ -333,6 +332,7 @@ export default function PreviousExamsPage() {
   const rawGroupedQuestions = useMemo(() => getGroupedPreviousExamQuestions(), []);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredQuery = useDeferredValue(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState<"ALL" | CategoryName>("ALL");
   const [selectedExamType, setSelectedExamType] = useState<"ALL" | "AM EXAM" | "PM EXAM">("ALL");
 
@@ -374,13 +374,6 @@ export default function PreviousExamsPage() {
     }));
   }, []);
 
-  const toggleYear = useCallback((year: string) => {
-    setOpenYears((current) => ({
-      ...current,
-      [year]: !current[year],
-    }));
-  }, []);
-
   const toggleQuestion = useCallback((questionId: string) => {
     setOpenQuestions((current) => ({
       ...current,
@@ -390,7 +383,7 @@ export default function PreviousExamsPage() {
 
   // Filtered grouped questions
   const filteredGroupedQuestions = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+    const query = deferredQuery.trim().toLowerCase();
 
     return rawGroupedQuestions
       .map((group) => {
@@ -441,7 +434,7 @@ export default function PreviousExamsPage() {
         };
       })
       .filter((group) => group.questions.length > 0);
-  }, [rawGroupedQuestions, searchQuery, selectedCategory, selectedExamType]);
+  }, [rawGroupedQuestions, deferredQuery, selectedCategory, selectedExamType]);
 
   const totalQuestionsInArchive = useMemo(() => {
     return rawGroupedQuestions.reduce((sum, group) => sum + group.questions.length, 0);
@@ -451,13 +444,16 @@ export default function PreviousExamsPage() {
     return filteredGroupedQuestions.reduce((sum, group) => sum + group.questions.length, 0);
   }, [filteredGroupedQuestions]);
 
+  const isFilterActive = Boolean(searchQuery.trim()) || selectedCategory !== "ALL" || selectedExamType !== "ALL";
+  const isYearOpenFor = (year: string) => openYears[year] ?? isFilterActive;
+
   const areAllYearsExpanded =
     filteredGroupedQuestions.length > 0 &&
-    filteredGroupedQuestions.every((g) => openYears[g.year]);
+    filteredGroupedQuestions.every((g) => isYearOpenFor(g.year));
 
   const handleToggleExpandAllYears = () => {
     if (areAllYearsExpanded) {
-      setOpenYears({});
+      setOpenYears(Object.fromEntries(filteredGroupedQuestions.map((g) => [g.year, false])));
     } else {
       const allOpen: Record<string, boolean> = {};
       filteredGroupedQuestions.forEach((g) => {
@@ -473,10 +469,10 @@ export default function PreviousExamsPage() {
       [year]: true,
     }));
 
-    const element = document.getElementById(`year-section-${year}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    // Instant: a smooth scroll gets cancelled while the panel animates open.
+    requestAnimationFrame(() => {
+      document.getElementById(`year-section-${year}`)?.scrollIntoView({ block: "start" });
+    });
   };
 
   const handleResetFilters = () => {
@@ -541,7 +537,7 @@ export default function PreviousExamsPage() {
         </div>
 
         {/* Sticky Search & Filter Bar */}
-        <div className="sticky top-0 z-30 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md py-4 border-b-2 border-zinc-950 dark:border-zinc-100 shadow-sm space-y-3">
+        <div className="sticky top-16 z-30 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md py-4 border-b-2 border-zinc-950 dark:border-zinc-100 shadow-sm space-y-3">
           {/* Top Row: Search Input + Expand/Collapse Button */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative flex-1">
@@ -687,7 +683,7 @@ export default function PreviousExamsPage() {
             </div>
             <h3 className="text-xl font-bold font-heading">No Matching Questions Found</h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
-              We couldn't find any archive questions matching "{searchQuery}". Try broadening your search or resetting category filters.
+              {searchQuery.trim() ? <>No archive questions match "{searchQuery}". </> : <>No archive questions match these filters. </>}Try a broader search or reset the filters.
             </p>
             <button
               type="button"
@@ -702,15 +698,10 @@ export default function PreviousExamsPage() {
         {/* Year Accordions & Questions List */}
         <div className="space-y-6">
           {filteredGroupedQuestions.map((entry) => {
-            const isFilteredOrSearching = Boolean(
-              searchQuery.trim() || selectedCategory !== "ALL" || selectedExamType !== "ALL",
-            );
-            const isYearOpen = isFilteredOrSearching ? true : Boolean(openYears[entry.year]);
+            const isYearOpen = isYearOpenFor(entry.year);
             const visibleLimit = visibleCountByYear[entry.year] ?? PAGE_SIZE;
-            const displayedQuestions = isFilteredOrSearching
-              ? entry.questions
-              : entry.questions.slice(0, visibleLimit);
-            const hasMore = !isFilteredOrSearching && entry.questions.length > displayedQuestions.length;
+            const displayedQuestions = entry.questions.slice(0, visibleLimit);
+            const hasMore = entry.questions.length > displayedQuestions.length;
 
             return (
               <section
@@ -723,7 +714,7 @@ export default function PreviousExamsPage() {
                   type="button"
                   aria-expanded={isYearOpen}
                   aria-controls={`year-panel-${entry.year}`}
-                  onClick={() => toggleYear(entry.year)}
+                  onClick={() => setOpenYears((current) => ({ ...current, [entry.year]: !isYearOpen }))}
                   className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3 md:gap-4">
@@ -822,6 +813,7 @@ export default function PreviousExamsPage() {
           onClick={() => setZoomedImageUrl(null)}
           role="dialog"
           aria-modal="true"
+          aria-label="Diagram preview"
         >
           <div
             className="relative max-w-4xl w-full max-h-[90vh] bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-100 p-4 flex flex-col items-center shadow-2xl"
@@ -834,6 +826,7 @@ export default function PreviousExamsPage() {
               <button
                 type="button"
                 onClick={() => setZoomedImageUrl(null)}
+                autoFocus
                 className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-bold cursor-pointer"
                 aria-label="Close diagram preview"
               >

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   BookOpenText,
   Archive,
@@ -114,7 +114,7 @@ export default function HomePage() {
           <div className="flex items-center gap-4 text-zinc-600 dark:text-zinc-400">
             <span>BENCHMARK: 60%</span>
             <span className="hidden md:inline">•</span>
-            <span className="hidden md:inline">700+ PAST QUESTIONS</span>
+            <span className="hidden md:inline">1,500+ PAST QUESTIONS</span>
             <span className="hidden lg:inline">•</span>
             <span className="hidden lg:inline">JAPAN-PHILIPPINES IT CURRICULUM</span>
           </div>
@@ -371,8 +371,8 @@ export default function HomePage() {
 
         {/* Bottom Dual Portals: Archive & Notes */}
         <div className="mt-12 pt-8 border-t-2 border-zinc-950 dark:border-zinc-200 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div
-            onClick={() => navigate('/previousexams')}
+          <Link
+            to="/previousexams"
             className="card-brut p-6 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5] transition cursor-pointer flex flex-col justify-between group"
           >
             <div>
@@ -386,17 +386,17 @@ export default function HomePage() {
                 Previous Exams Archive
               </h2>
               <p className="text-sm text-zinc-600 dark:text-zinc-300 mt-2 leading-relaxed">
-                Browse official past papers from 2011 to 2025 organized by year, topic, and category with complete solutions and KaTeX mathematical notation.
+                Browse official past papers from 2016 to 2026 organized by year, topic, and category with complete solutions and KaTeX mathematical notation.
               </p>
             </div>
             <div className="mt-5 flex items-center gap-1.5 font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
               <span>EXPLORE PAST PAPERS</span>
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </div>
-          </div>
+          </Link>
 
-          <div
-            onClick={() => navigate('/notes')}
+          <Link
+            to="/notes"
             className="card-brut p-6 hover:shadow-[5px_5px_0px_0px_#09090b] dark:hover:shadow-[5px_5px_0px_0px_#f4f4f5] transition cursor-pointer flex flex-col justify-between group"
           >
             <div>
@@ -417,7 +417,7 @@ export default function HomePage() {
               <span>ACCESS STUDY NOTES</span>
               <ArrowSquareOut className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </div>
-          </div>
+          </Link>
         </div>
 
       </div>

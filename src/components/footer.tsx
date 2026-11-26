@@ -1,3 +1,5 @@
+import WhatsNew from './WhatsNew'
+
 const contributors = [
   { name: 'mingotrees', url: 'https://github.com/mingotrees' },
   { name: 'saiimonn', url: 'https://github.com/saiimonn' },
@@ -23,6 +25,7 @@ export default function Footer() {
           <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans">
             Free, open-source preparation platform for the PhilNITS Fundamental Engineer (FE) Examination.
           </p>
+          <WhatsNew />
         </div>
 
         {/* Right: Contributors */}

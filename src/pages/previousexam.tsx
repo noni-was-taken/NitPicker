@@ -28,7 +28,7 @@ import {
   loadBookmarkedQuestionIds,
   toggleQuestionBookmark,
 } from "../exam/mockExamModel";
-import { normalizeLegacySymbols, normalizeMathDelimiters } from "../lib/textFormat";
+import { escapeBlockStart, normalizeLegacySymbols, normalizeMathDelimiters } from "../lib/textFormat";
 import "katex/dist/katex.min.css";
 
 const KATEX_REHYPE_PLUGINS = [[rehypeKatex, { strict: false, throwOnError: false }]] as any;
@@ -252,7 +252,7 @@ const QuestionAccordionItem = React.memo(function QuestionAccordionItem({
                                 rehypePlugins={KATEX_REHYPE_PLUGINS}
                               >
                                 {normalizeMathDelimiters(
-                                  normalizeLegacySymbols(option.text),
+                                  escapeBlockStart(normalizeLegacySymbols(option.text)),
                                 )}
                               </ReactMarkdown>
                             ) : null}

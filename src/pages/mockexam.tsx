@@ -7,7 +7,7 @@ import rehypeKatex from "rehype-katex";
 import Layout from "../components/Layout";
 import { MOCK_EXAM_IMAGE_BASE_PATH } from "../config/constants";
 import ReportQuestionButton from "../components/ReportQuestionButton";
-import { normalizeLegacySymbols, normalizeMathDelimiters } from "../lib/textFormat";
+import { escapeBlockStart, normalizeLegacySymbols, normalizeMathDelimiters } from "../lib/textFormat";
 import { trackEvent } from "../lib/analytics";
 import { Maximize2 as ArrowsOutIcon, Bookmark as BookmarkSimpleIcon, ChevronLeft as CaretLeftIcon, ChevronRight as CaretRightIcon, CircleCheck as CheckCircleIcon, Clock as ClockIcon, Eye as EyeIcon, EyeOff as EyeSlashIcon, Flag as FlagIcon, Lightbulb as LightbulbIcon, CirclePause as PauseCircleIcon, CirclePlay as PlayCircleIcon, CircleHelp as QuestionIcon, Frown as SmileySadIcon, LayoutGrid as SquaresFourIcon, TriangleAlert as WarningIcon, CircleX as XCircleIcon, X as XIcon } from "lucide-react";
 import {
@@ -531,7 +531,7 @@ export default function MockExamPage() {
             remarkPlugins={mathGfmPlugins}
             rehypePlugins={katexPlugins}
           >
-            {normalizeMathDelimiters(normalizeLegacySymbols(choice.text))}
+            {normalizeMathDelimiters(escapeBlockStart(normalizeLegacySymbols(choice.text)))}
           </ReactMarkdown>
         );
       }
